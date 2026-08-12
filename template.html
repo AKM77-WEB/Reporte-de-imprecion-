@@ -222,7 +222,7 @@ License: MIT
 
   /* ---------- Impresión / PDF ejecutivo ---------- */
   @media print{
-    @page{ size: letter; margin: 12mm 13mm; background:#fff; }
+    @page{ size: letter; margin: 10mm 12mm; background:#fff; }
     html{ background:#ffffff !important; }
     body{ background:#ffffff !important; background-image:none !important; }
     *{
@@ -243,11 +243,11 @@ License: MIT
     #dash header.top{ border-bottom:2px solid #111; padding-bottom:7px; }
     .brand{ font-size:10px; }
     .gen-note{ font-size:10px; }
-    #dash h1.title{ font-size:23px; font-weight:800; margin:13px 0 5px; }
-    .subline{ font-size:11px; line-height:1.45; margin:0 0 16px; }
+    #dash h1.title{ font-size:20px; font-weight:800; margin:9px 0 4px; }
+    .subline{ font-size:10.5px; line-height:1.4; margin:0 0 11px; }
 
     /* KPIs: una sola franja continua, no 4 cajas sueltas */
-    .kpi-grid{ grid-template-columns: repeat(4,1fr) !important; gap:0; margin:0 0 18px; border-top:1.5px solid #111; border-bottom:1px solid #ccc; padding:9px 0; }
+    .kpi-grid{ grid-template-columns: repeat(4,1fr) !important; gap:0; margin:0 0 12px; border-top:1.5px solid #111; border-bottom:1px solid #ccc; padding:7px 0; }
     .kpi{ padding:0 14px; opacity:1 !important; transform:none !important; border-right:1px solid #ddd; }
     .kpi:first-child{ padding-left:0; }
     .kpi:last-child{ border-right:none; }
@@ -256,36 +256,36 @@ License: MIT
     .kpi-sub{ font-size:9.5px; margin-top:2px; }
     .kpi-value.accent2{ color:#a3305d; text-shadow:none; }
 
-    .section{ margin-top:16px; break-inside: avoid-page; }
-    .section-head h2{ font-size:13.5px; }
-    .section-note{ font-size:10px; }
+    .section{ margin-top:10px; break-inside: avoid-page; }
+    .section-head h2{ font-size:12.5px; }
+    .section-note{ font-size:9.5px; }
 
-    .consumo-bar{ height:11px; margin-top:8px; border:1px solid #d8d7d3; border-radius:3px; }
-    .legend-row{ font-size:10px; margin-top:6px; gap:16px; }
+    .consumo-bar{ height:10px; margin-top:6px; border:1px solid #d8d7d3; border-radius:3px; }
+    .legend-row{ font-size:9.5px; margin-top:5px; gap:16px; }
 
     /* Áreas: lista compacta con divisor fino, no tarjetas flotantes */
-    .area-list{ gap:0; margin-top:8px; }
+    .area-list{ gap:0; margin-top:6px; }
     .area-card{
-      padding:8px 0; cursor:default; opacity:1 !important; transform:none !important;
+      padding:6px 0; cursor:default; opacity:1 !important; transform:none !important;
       border-bottom:1px solid #e6e5e2; break-inside: avoid;
     }
     .area-card:last-child{ border-bottom:none; }
     .area-top{ gap:10px; }
-    .area-name{ font-size:12.5px; }
-    .area-meta{ font-size:10px; }
-    .area-costexc{ font-size:12.5px; }
-    .area-costexc-sub{ font-size:9.5px; }
-    .area-bar{ height:6px; margin-top:6px; border-radius:2px; }
-    .area-bottom{ font-size:10px; margin-top:5px; }
+    .area-name{ font-size:12px; }
+    .area-meta{ font-size:9.5px; }
+    .area-costexc{ font-size:12px; }
+    .area-costexc-sub{ font-size:9px; }
+    .area-bar{ height:5px; margin-top:5px; border-radius:2px; }
+    .area-bottom{ font-size:9.5px; margin-top:4px; }
 
-    table.tbl{ font-size:10.5px; margin-top:10px; }
-    table.tbl thead th{ padding-bottom:5px; font-size:9px; }
-    table.tbl tbody td{ padding:5px 0; }
+    table.tbl{ font-size:10px; margin-top:7px; }
+    table.tbl thead th{ padding-bottom:4px; font-size:8.5px; }
+    table.tbl tbody td{ padding:3.5px 0; }
     table.tbl tbody tr{ opacity:1 !important; break-inside: avoid; }
-    .tag{ font-size:9px; padding:2px 7px; }
-    .mini-bar-wrap{ width:90px; height:5px; }
+    .tag{ font-size:8.5px; padding:2px 6px; }
+    .mini-bar-wrap{ width:80px; height:5px; }
 
-    footer.foot{ margin-top:16px; font-size:9px; padding-top:9px; line-height:1.5; }
+    footer.foot{ margin-top:10px; font-size:8.5px; padding-top:6px; line-height:1.4; }
   }
 
   @media screen and (max-width: 860px){
@@ -337,7 +337,7 @@ License: MIT
       <div class="top-actions">
         <span class="gen-note">Generado el <span id="hGenerado"></span></span>
         <button class="btn btn-outline-accent no-print" id="btnHistorial">🕘 Historial de reportes</button>
-        <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Descargar PDF ejecutivo</button>
+        <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Imprimir / Guardar PDF</button>
         <button class="btn btn-ghost no-print" id="btnReset">Nuevo reporte</button>
       </div>
     </header>
