@@ -336,11 +336,25 @@ License: MIT
       <div class="brand"><span class="badge-dot"></span> Reporte mensual · <span id="hPeriodo"></span></div>
       <div class="top-actions">
         <span class="gen-note">Generado el <span id="hGenerado"></span></span>
-        <button class="btn btn-outline-accent no-print" id="btnZip">⇩ Respaldo ZIP (CSV + reporte)</button>
+        <button class="btn btn-outline-accent no-print" id="btnHistorial">🕘 Historial de reportes</button>
         <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Descargar PDF ejecutivo</button>
         <button class="btn btn-ghost no-print" id="btnReset">Nuevo reporte</button>
       </div>
     </header>
+
+    <div class="section hidden" id="historialPanel">
+      <div class="section-head">
+        <h2>Historial de reportes</h2>
+        <span class="section-note">Guardado en este mismo sitio, mes a mes</span>
+      </div>
+      <div id="historialList" style="margin-top:18px; display:flex; flex-direction:column; gap:10px;"></div>
+      <div class="section-note" id="historialStatus" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="glass no-print hidden" id="archBanner" style="padding:14px 18px; margin-bottom:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-color: rgba(213,81,129,0.4);">
+      <span style="font-size:13.5px; color:var(--ink-2);">Estás viendo un reporte del historial, no el más reciente.</span>
+      <button class="btn btn-outline-accent" id="btnVerActual" type="button">Ver el más reciente →</button>
+    </div>
 
     <h1 class="title">Costo de impresión del mes</h1>
     <p class="subline" id="pIntro"></p>
@@ -412,10 +426,6 @@ License: MIT
 <script>
 (function(){
   "use strict";
-
-  // Copia del HTML tal como llegó (antes de que este script modifique el DOM).
-  // Se usa para generar el archivo exportado "con datos incrustados" que se comparte por OneDrive/SharePoint.
-  var PRISTINE_HTML = document.documentElement.outerHTML;
 
   var AREAS = [
     { key:'almacen', name:'Almacén', color:'var(--area-1)' },
@@ -588,6 +598,7 @@ License: MIT
     var areas = AREAS.map(function(a){ return loaded[a.key]; });
     var epson = collectEpson();
     REPORT = { periodo:periodo, generado:generado, renta:renta, incluidas:incluidas, tarifa:tarifa, areas:areas, epson:epson };
+    LATEST_REPORT = REPORT;
     renderDashboard(REPORT);
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('dash').classList.remove('hidden');
@@ -606,148 +617,78 @@ License: MIT
     window.print();
   });
 
-  // ---------- helpers de exportación ----------
-  function safeFileToken(s){
-    return (s || '')
-      .normalize('NFD').replace(/[̀-ͯ]/g,'')
-      .replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase().replace(/^_+|_+$/g,'');
+  // ---------- historial de reportes (guardado en reports/ junto a este sitio) ----------
+  var LATEST_REPORT = null;   // el reporte con el que abrió esta página (el más reciente)
+  var historialManifest = null;
+  var historialLoading = false;
+
+  function periodKey(r){ return r ? (r.periodo + '|' + r.generado) : null; }
+
+  function showArchBanner(show){
+    document.getElementById('archBanner').classList.toggle('hidden', !show);
   }
 
-  // Construye el HTML autocontenido con los datos del reporte incrustados
-  // (mismo archivo que abre directo en el dashboard, sin pasar por la pantalla de carga).
-  function buildExportedHtmlString(){
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(PRISTINE_HTML, 'text/html');
-
-    var jsonStr = JSON.stringify(REPORT).replace(/<\//g, '<\\/'); // evita que se corte la etiqueta de cierre del script al incrustarlo
-
-    var dataScript = doc.createElement('script');
-    dataScript.type = 'application/json';
-    dataScript.id = 'embedded-report-data';
-    dataScript.textContent = jsonStr;
-    doc.body.appendChild(dataScript);
-
-    var bootScript = doc.createElement('script');
-    bootScript.id = 'embedded-boot';
-    bootScript.textContent =
-      "(function(){var d=document.getElementById('embedded-report-data');if(!d)return;" +
-      "try{var data=JSON.parse(d.textContent);if(window.__loadEmbeddedReport)window.__loadEmbeddedReport(data);}" +
-      "catch(e){console.error('No se pudo cargar el reporte incrustado', e);}})();";
-    doc.body.appendChild(bootScript);
-
-    return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  function loadHistorialEntry(entry, statusEl){
+    statusEl.textContent = 'Cargando ' + entry.periodo + '…';
+    fetch('reports/' + entry.file, { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data){
+        REPORT = data;
+        renderDashboard(REPORT);
+        document.getElementById('historialPanel').classList.add('hidden');
+        showArchBanner(periodKey(data) !== periodKey(LATEST_REPORT));
+        document.getElementById('detail').classList.add('hidden');
+        document.getElementById('dash').classList.remove('hidden');
+        window.scrollTo({top:0, behavior:'instant'});
+      })
+      .catch(function(err){ statusEl.textContent = 'No se pudo cargar ese periodo: ' + err.message; });
   }
 
-  function downloadBlob(blob, filename){
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-  }
-
-  // ---------- mini generador de ZIP (solo "store", sin compresión) ----------
-  var CRC_TABLE = (function(){
-    var t = [];
-    for (var n=0; n<256; n++){
-      var c = n;
-      for (var k=0; k<8; k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
-      t[n] = c >>> 0;
-    }
-    return t;
-  })();
-  function crc32Bytes(bytes){
-    var crc = 0xFFFFFFFF;
-    for (var i=0; i<bytes.length; i++){ crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8); }
-    return (crc ^ 0xFFFFFFFF) >>> 0;
-  }
-  function zU16(v){ return new Uint8Array([v & 0xFF, (v >>> 8) & 0xFF]); }
-  function zU32(v){ return new Uint8Array([v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]); }
-
-  function buildZip(entries){ // entries: [{ name:string, bytes:Uint8Array }]
-    var encoder = new TextEncoder();
-    var localParts = [];
-    var centralParts = [];
-    var offset = 0;
-    var dosTime = zU16(0), dosDate = zU16(0x21); // fecha de referencia fija (no relevante para los datos)
-    var centralSize = 0;
-
-    entries.forEach(function(entry){
-      var nameBytes = encoder.encode(entry.name);
-      var data = entry.bytes;
-      var crc = crc32Bytes(data);
-
-      var local = [
-        zU32(0x04034b50), zU16(20), zU16(0), zU16(0), dosTime, dosDate,
-        zU32(crc), zU32(data.length), zU32(data.length), zU16(nameBytes.length), zU16(0)
-      ];
-      localParts.push.apply(localParts, local);
-      localParts.push(nameBytes, data);
-
-      var central = [
-        zU32(0x02014b50), zU16(20), zU16(20), zU16(0), zU16(0), dosTime, dosDate,
-        zU32(crc), zU32(data.length), zU32(data.length), zU16(nameBytes.length), zU16(0), zU16(0), zU16(0), zU16(0), zU32(0),
-        zU32(offset)
-      ];
-      centralParts.push.apply(centralParts, central);
-      centralParts.push(nameBytes);
-
-      var localHeaderSize = 30 + nameBytes.length + data.length;
-      offset += localHeaderSize;
-      centralSize += 46 + nameBytes.length;
+  function renderHistorialList(manifest){
+    var list = document.getElementById('historialList');
+    var statusEl = document.getElementById('historialStatus');
+    list.innerHTML = '';
+    if(!manifest.length){ statusEl.textContent = 'Todavía no hay reportes guardados en el historial.'; return; }
+    statusEl.textContent = '';
+    manifest.forEach(function(entry, i){
+      var row = document.createElement('div');
+      row.className = 'glass';
+      row.style.cssText = 'padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; cursor:pointer;';
+      row.innerHTML =
+        '<span><strong>'+escapeHtml(entry.periodo)+'</strong>'+(i===0?' <span class="tag" style="margin-left:8px;">más reciente</span>':'')+
+        '<span style="display:block; color:var(--ink-muted); font-size:12.5px; margin-top:3px;">Generado el '+escapeHtml(entry.generado)+'</span></span>' +
+        '<span class="area-arrow">Ver →</span>';
+      row.addEventListener('click', function(){ loadHistorialEntry(entry, statusEl); });
+      list.appendChild(row);
     });
-
-    var eocd = [
-      zU32(0x06054b50), zU16(0), zU16(0), zU16(entries.length), zU16(entries.length),
-      zU32(centralSize), zU32(offset), zU16(0)
-    ];
-
-    return new Blob(localParts.concat(centralParts, eocd), { type:'application/zip' });
   }
 
-  function csvField(v){
-    var s = String(v===null||v===undefined ? '' : v);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
-  }
+  document.getElementById('btnHistorial').addEventListener('click', function(){
+    var panel = document.getElementById('historialPanel');
+    var willShow = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if(!willShow || historialManifest || historialLoading) { if(historialManifest) renderHistorialList(historialManifest); return; }
+    historialLoading = true;
+    var statusEl = document.getElementById('historialStatus');
+    statusEl.textContent = 'Cargando historial…';
+    fetch('reports/index.json', { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(manifest){
+        historialManifest = manifest;
+        renderHistorialList(manifest);
+      })
+      .catch(function(err){ statusEl.textContent = 'No se pudo cargar el historial: ' + err.message; })
+      .finally(function(){ historialLoading = false; });
+  });
 
-  // ---------- respaldo ZIP: CSV originales + lecturas Epson + snapshot HTML ----------
-  document.getElementById('btnZip').addEventListener('click', function(){
-    if(!REPORT) return;
-    var rawAreas = AREAS.filter(function(a){ return loaded[a.key] && loaded[a.key].rawCsv; });
-    if(rawAreas.length < AREAS.length){
-      alert('El respaldo ZIP incluye los CSV originales tal como los subiste. Genera el reporte subiendo los 4 CSV en esta misma sesión antes de descargar el respaldo (si abriste este archivo desde un link compartido, ya no trae los CSV originales, solo los datos calculados).');
-      if(rawAreas.length === 0) return;
-    }
-    try{
-      var encoder = new TextEncoder();
-      var entries = [];
-      rawAreas.forEach(function(a){
-        var L = loaded[a.key];
-        entries.push({ name: (L.filename || (a.name + '.csv')), bytes: encoder.encode(L.rawCsv) });
-      });
-      if(REPORT.epson && REPORT.epson.length){
-        var lines = ['Nombre,Paginas,Fecha de lectura,Costo por pagina (MXN),Costo del periodo (MXN)'];
-        REPORT.epson.forEach(function(p){
-          lines.push([
-            csvField(p.name), csvField(p.pages), csvField(p.fecha),
-            csvField(p.costPerPage!==null ? p.costPerPage.toFixed(4) : ''),
-            csvField(p.costPeriod!==null ? p.costPeriod.toFixed(2) : '')
-          ].join(','));
-        });
-        entries.push({ name:'Epson_lecturas.csv', bytes: encoder.encode(lines.join('\r\n')) });
-      }
-      var htmlStr = buildExportedHtmlString();
-      var safePeriodo = safeFileToken(REPORT.periodo) || 'actual';
-      entries.push({ name: 'reporte_impresion_' + safePeriodo + '.html', bytes: encoder.encode(htmlStr) });
-
-      var zipBlob = buildZip(entries);
-      downloadBlob(zipBlob, 'respaldo_impresion_' + safePeriodo + '.zip');
-    } catch(err){
-      alert('No se pudo generar el respaldo ZIP: ' + err.message);
-    }
+  document.getElementById('btnVerActual').addEventListener('click', function(){
+    if(!LATEST_REPORT) return;
+    REPORT = LATEST_REPORT;
+    renderDashboard(REPORT);
+    showArchBanner(false);
+    document.getElementById('detail').classList.add('hidden');
+    document.getElementById('dash').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'instant'});
   });
 
   document.getElementById('btnBack').addEventListener('click', function(){
@@ -988,6 +929,7 @@ License: MIT
   // sin pasar por la pantalla de carga (así quien lo recibe abre y ya ve el corte más reciente).
   window.__loadEmbeddedReport = function(reportObj){
     REPORT = reportObj;
+    LATEST_REPORT = reportObj;
     renderDashboard(REPORT);
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('detail').classList.add('hidden');

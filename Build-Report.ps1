@@ -24,7 +24,8 @@ param(
   [double]$Tarifa = 0.20,
   [string]$EpsonJson = $null,
   [string]$TemplatePath = "$PSScriptRoot\template.html",
-  [string]$OutputPath = "$PSScriptRoot\index.html"
+  [string]$OutputPath = "$PSScriptRoot\index.html",
+  [string]$ReportsDir = "$PSScriptRoot\reports"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -115,8 +116,32 @@ $dataScript = '<script type="application/json" id="embedded-report-data">' + $js
 $bootScript = '<script id="embedded-boot">(function(){var d=document.getElementById(''embedded-report-data'');if(!d)return;try{var data=JSON.parse(d.textContent);if(window.__loadEmbeddedReport)window.__loadEmbeddedReport(data);}catch(e){console.error(''No se pudo cargar el reporte incrustado'', e);}})();</script>'
 
 $final = $template -replace '</body>', ($dataScript + "`n" + $bootScript + "`n</body>")
-Set-Content -Path $OutputPath -Value $final -Encoding UTF8 -NoNewline
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($OutputPath, $final, $Utf8NoBom)
 
+# ---------- guarda este corte en el historial (reports/<slug>.json + reports/index.json) ----------
+if (-not (Test-Path $ReportsDir)) { New-Item -ItemType Directory -Path $ReportsDir | Out-Null }
+
+$slug = ($Periodo.ToLowerInvariant() -replace '[^a-z0-9]+', '-').Trim('-')
+if (-not $slug) { $slug = 'reporte-' + (Get-Date -Format 'yyyyMMddHHmmss') }
+
+$reportFile = Join-Path $ReportsDir "$slug.json"
+[System.IO.File]::WriteAllText($reportFile, $json, $Utf8NoBom)
+
+$manifestPath = Join-Path $ReportsDir 'index.json'
+$manifest = @()
+if (Test-Path $manifestPath) {
+  $manifest = @(Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json)
+}
+$manifest = @($manifest | Where-Object { $_.slug -ne $slug })
+$entry = [ordered]@{ slug=$slug; periodo=$Periodo; generado=$Generado; file="$slug.json" }
+$manifest = @($entry) + $manifest   # el mas reciente generado queda primero
+
+$manifestJson = $manifest | ConvertTo-Json -Depth 5
+if ($manifest.Count -eq 1) { $manifestJson = '[' + ($manifest[0] | ConvertTo-Json -Depth 5 -Compress) + ']' }
+[System.IO.File]::WriteAllText($manifestPath, $manifestJson, $Utf8NoBom)
+
+Write-Host "Historial -> $reportFile (manifiesto: $($manifest.Count) periodos)"
 Write-Host "OK -> $OutputPath"
 Write-Host ("Total paginas: {0}" -f ($areas | ForEach-Object { $_.totals.total } | Measure-Object -Sum).Sum)
 foreach ($a in $areas) { Write-Host ("  {0}: {1} pag, {2} activos, equipo {3}" -f $a.area, $a.totals.total, $a.activos, $a.model) }
