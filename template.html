@@ -337,7 +337,6 @@ License: MIT
       <div class="top-actions">
         <span class="gen-note">Generado el <span id="hGenerado"></span></span>
         <button class="btn btn-outline-accent no-print" id="btnZip">⇩ Respaldo ZIP (CSV + reporte)</button>
-        <button class="btn btn-outline-accent no-print" id="btnExport">⇩ Exportar HTML (OneDrive/SharePoint)</button>
         <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Descargar PDF ejecutivo</button>
         <button class="btn btn-ghost no-print" id="btnReset">Nuevo reporte</button>
       </div>
@@ -649,19 +648,6 @@ License: MIT
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
   }
-
-  // ---------- exportar HTML con los datos incrustados (para OneDrive/SharePoint) ----------
-  document.getElementById('btnExport').addEventListener('click', function(){
-    if(!REPORT) return;
-    try{
-      var htmlStr = buildExportedHtmlString();
-      var blob = new Blob([htmlStr], { type:'text/html' });
-      var safePeriodo = safeFileToken(REPORT.periodo) || 'actual';
-      downloadBlob(blob, 'reporte_impresion_' + safePeriodo + '.html');
-    } catch(err){
-      alert('No se pudo exportar el archivo: ' + err.message);
-    }
-  });
 
   // ---------- mini generador de ZIP (solo "store", sin compresión) ----------
   var CRC_TABLE = (function(){
