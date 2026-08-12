@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Impresión · Panel Ejecutivo</title>
+<script>
+/* @license
+Papa Parse
+v5.5.4
+https://github.com/mholt/PapaParse
+License: MIT
+*/
+((e,t)=>{"function"==typeof define&&define.amd?define([],t):"object"==typeof module&&"undefined"!=typeof exports?module.exports=t():e.Papa=t()})(this,function r(){var n="undefined"!=typeof self?self:"undefined"!=typeof window?window:void 0!==n?n:{};var d,s=!n.document&&!!n.postMessage,a=n.IS_PAPA_WORKER||!1,o={},h=0,v={};function P(e){return 65279===e.charCodeAt(0)?e.slice(1):e}function u(e){this._handle=null,this._finished=!1,this._completed=!1,this._halted=!1,this._input=null,this._baseIndex=0,this._partialLine="",this._rowCount=0,this._start=0,this._nextChunk=null,this.isFirstChunk=!0,this._completeResults={data:[],errors:[],meta:{}},function(e){var t=b(e);t.chunkSize=parseInt(t.chunkSize),e.step||e.chunk||(t.chunkSize=null);this._handle=new i(t),(this._handle.streamer=this)._config=t}.call(this,e),this.parseChunk=function(t,e){var i=parseInt(this._config.skipFirstNLines)||0;if(this.isFirstChunk&&0<i){let e=this._config.newline;e||(r=this._config.quoteChar||'"',e=this._handle.guessLineEndings(t,r)),t=[...t.split(e).slice(i)].join(e)}this.isFirstChunk&&q(this._config.beforeFirstChunk)&&void 0!==(r=this._config.beforeFirstChunk(t))&&(t=r),this.isFirstChunk=!1,this._halted=!1;var i=this._partialLine+t,r=(this._partialLine="",this._handle.parse(i,this._baseIndex,!this._finished));if(!this._handle.paused()&&!this._handle.aborted()){t=r.meta.cursor,i=(this._finished||(this._partialLine=i.substring(t-this._baseIndex),this._baseIndex=t),r&&r.data&&(this._rowCount+=r.data.length),this._finished||this._config.preview&&this._rowCount>=this._config.preview);if(a)n.postMessage({results:r,workerId:v.WORKER_ID,finished:i});else if(q(this._config.chunk)&&!e){if(this._config.chunk(r,this._handle),this._handle.paused()||this._handle.aborted())return void(this._halted=!0);this._completeResults=r=void 0}return this._config.step||this._config.chunk||(this._completeResults.data=this._completeResults.data.concat(r.data),this._completeResults.errors=this._completeResults.errors.concat(r.errors),this._completeResults.meta=r.meta),this._completed||!i||!q(this._config.complete)||r&&r.meta.aborted||(this._config.complete(this._completeResults,this._input),this._completed=!0),i||r&&r.meta.paused||this._nextChunk(),r}this._halted=!0},this._sendError=function(e){q(this._config.error)?this._config.error(e):a&&this._config.error&&n.postMessage({workerId:v.WORKER_ID,error:e,finished:!1})}}function f(e){var r;(e=e||{}).chunkSize||(e.chunkSize=v.RemoteChunkSize),u.call(this,e),this._nextChunk=s?function(){this._readChunk(),this._chunkLoaded()}:function(){this._readChunk()},this.stream=function(e){this._input=e,this._nextChunk()},this._readChunk=function(){if(this._finished)this._chunkLoaded();else{if(r=new XMLHttpRequest,this._config.withCredentials&&(r.withCredentials=this._config.withCredentials),s||(r.onload=y(this._chunkLoaded,this),r.onerror=y(this._chunkError,this)),r.open(this._config.downloadRequestBody?"POST":"GET",this._input,!s),this._config.downloadRequestHeaders){var e,t=this._config.downloadRequestHeaders;for(e in t)r.setRequestHeader(e,t[e])}var i;this._config.chunkSize&&(i=this._start+this._config.chunkSize-1,r.setRequestHeader("Range","bytes="+this._start+"-"+i));try{r.send(this._config.downloadRequestBody)}catch(e){this._chunkError(e.message)}s&&0===r.status&&this._chunkError()}},this._chunkLoaded=function(){4===r.readyState&&(r.status<200||400<=r.status?this._chunkError():(this._start+=this._config.chunkSize||r.responseText.length,this._finished=!this._config.chunkSize||this._start>=(e=>null!==(e=e.getResponseHeader("Content-Range"))?parseInt(e.substring(e.lastIndexOf("/")+1)):-1)(r),this.parseChunk(r.responseText)))},this._chunkError=function(e){e=r.statusText||e;this._sendError(new Error(e))}}function l(e){(e=e||{}).chunkSize||(e.chunkSize=v.LocalChunkSize),u.call(this,e);var i,r,n="undefined"!=typeof FileReader;this.stream=function(e){this._input=e,r=e.slice||e.webkitSlice||e.mozSlice,n?((i=new FileReader).onload=y(this._chunkLoaded,this),i.onerror=y(this._chunkError,this)):i=new FileReaderSync,this._nextChunk()},this._nextChunk=function(){this._finished||this._config.preview&&!(this._rowCount<this._config.preview)||this._readChunk()},this._readChunk=function(){var e=this._input,t=(this._config.chunkSize&&(t=Math.min(this._start+this._config.chunkSize,this._input.size),e=r.call(e,this._start,t)),i.readAsText(e,this._config.encoding));n||this._chunkLoaded({target:{result:t}})},this._chunkLoaded=function(e){this._start+=this._config.chunkSize,this._finished=!this._config.chunkSize||this._start>=this._input.size,this.parseChunk(e.target.result)},this._chunkError=function(){this._sendError(i.error)}}function c(e){var i;u.call(this,e=e||{}),this.stream=function(e){return i=e,this._nextChunk()},this._nextChunk=function(){var e,t;if(!this._finished)return e=this._config.chunkSize,i=e?(t=i.substring(0,e),i.substring(e)):(t=i,""),this._finished=!i,this.parseChunk(t)}}function p(e){u.call(this,e=e||{});var t=[],i=!0,r=!1;this.pause=function(){u.prototype.pause.apply(this,arguments),this._input.pause()},this.resume=function(){u.prototype.resume.apply(this,arguments),this._input.resume()},this.stream=function(e){this._input=e,this._input.on("data",this._streamData),this._input.on("end",this._streamEnd),this._input.on("error",this._streamError)},this._checkIsFinished=function(){r&&1===t.length&&(this._finished=!0)},this._nextChunk=function(){this._checkIsFinished(),t.length?this.parseChunk(t.shift()):i=!0},this._streamData=y(function(e){try{t.push("string"==typeof e?e:e.toString(this._config.encoding)),i&&(i=!1,this._checkIsFinished(),this.parseChunk(t.shift()))}catch(e){this._streamError(e)}},this),this._streamError=y(function(e){this._streamCleanUp(),this._sendError(e)},this),this._streamEnd=y(function(){this._streamCleanUp(),r=!0,this._streamData("")},this),this._streamCleanUp=y(function(){this._input.removeListener("data",this._streamData),this._input.removeListener("end",this._streamEnd),this._input.removeListener("error",this._streamError)},this)}function i(m){var n,s,a,t,o=Math.pow(2,53),h=-o,u=/^\s*-?(\d+\.?|\.\d+|\d+\.\d+)([eE][-+]?\d+)?\s*$/,d=/^((\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)))$/,i=this,r=0,f=0,l=!1,e=!1,c=[],p={data:[],errors:[],meta:{}};function y(e){return"greedy"===m.skipEmptyLines?""===e.join("").trim():1===e.length&&0===e[0].length}function g(){if(p&&a&&(k("Delimiter","UndetectableDelimiter","Unable to auto-detect delimiting character; defaulted to '"+v.DefaultDelimiter+"'"),a=!1),m.skipEmptyLines&&(p.data=p.data.filter(function(e){return!y(e)})),_()){if(p)if(Array.isArray(p.data[0])){for(var e=0;_()&&e<p.data.length;e++)p.data[e].forEach(t);p.data.splice(0,1)}else p.data.forEach(t);function t(e,t){e=P(e),q(m.transformHeader)&&(e=m.transformHeader(e,t)),c.push(e)}}function i(e,t){for(var i=m.header?{}:[],r=0;r<e.length;r++){var n=r,s=e[r],s=((e,t)=>(e=>(m.dynamicTypingFunction&&void 0===m.dynamicTyping[e]&&(m.dynamicTyping[e]=m.dynamicTypingFunction(e)),!0===(m.dynamicTyping[e]||m.dynamicTyping)))(e)?"true"===t||"TRUE"===t||"false"!==t&&"FALSE"!==t&&((e=>{if(u.test(e)){e=parseFloat(e);if(h<e&&e<o)return 1}})(t)?parseFloat(t):d.test(t)?new Date(t):""===t?null:t):t)(n=m.header?r>=c.length?"__parsed_extra":c[r]:n,s=m.transform?m.transform(s,n):s);"__parsed_extra"===n?(i[n]=i[n]||[],i[n].push(s)):i[n]=s}return m.header&&(r>c.length?k("FieldMismatch","TooManyFields","Too many fields: expected "+c.length+" fields but parsed "+r,f+t):r<c.length&&k("FieldMismatch","TooFewFields","Too few fields: expected "+c.length+" fields but parsed "+r,f+t)),i}var r;p&&(m.header||m.dynamicTyping||m.transform)&&(r=1,!p.data.length||Array.isArray(p.data[0])?(p.data=p.data.map(i),r=p.data.length):p.data=i(p.data,0),m.header&&p.meta&&(p.meta.fields=c),f+=r)}function _(){return m.header&&0===c.length}function k(e,t,i,r){e={type:e,code:t,message:i};void 0!==r&&(e.row=r),p.errors.push(e)}q(m.step)&&(t=m.step,m.step=function(e){p=e,_()?g():(g(),0!==p.data.length&&(r+=e.data.length,m.preview&&r>m.preview?s.abort():(p.data=p.data[0],t(p,i))))}),this.parse=function(e,t,i){var r=m.quoteChar||'"',r=(m.newline||(m.newline=this.guessLineEndings(e,r)),a=!1,m.delimiter?q(m.delimiter)&&(m.delimiter=m.delimiter(e),p.meta.delimiter=m.delimiter):((r=((e,t,i,r,n)=>{var s,a,o,h;n=n||[",","\t","|",";",v.RECORD_SEP,v.UNIT_SEP];for(var u=0;u<n.length;u++){for(var d,f=n[u],l=0,c=0,p=0,g=(o=void 0,new E({comments:r,delimiter:f,newline:t,preview:10}).parse(e)),_=0;_<g.data.length;_++)i&&y(g.data[_])?p++:(d=g.data[_].length,c+=d,void 0===o?o=d:0<d&&(l+=Math.abs(d-o),o=d));0<g.data.length&&(c/=g.data.length-p),(void 0===a||l<=a)&&(void 0===h||h<c)&&1.99<c&&(a=l,s=f,h=c)}return{successful:!!(m.delimiter=s),bestDelimiter:s}})(e,m.newline,m.skipEmptyLines,m.comments,m.delimitersToGuess)).successful?m.delimiter=r.bestDelimiter:(a=!0,m.delimiter=v.DefaultDelimiter),p.meta.delimiter=m.delimiter),b(m));return m.preview&&m.header&&r.preview++,n=e,s=new E(r),p=s.parse(n,t,i),g(),l?{meta:{paused:!0}}:p||{meta:{paused:!1}}},this.paused=function(){return l},this.pause=function(){l=!0,s.abort(),n=q(m.chunk)?"":n.substring(s.getCharIndex())},this.resume=function(){i.streamer._halted?(l=!1,i.streamer.parseChunk(n,!0)):setTimeout(i.resume,3)},this.aborted=function(){return e},this.abort=function(){e=!0,s.abort(),p.meta.aborted=!0,q(m.complete)&&m.complete(p),n=""},this.guessLineEndings=function(e,t){e=e.substring(0,1048576);var t=new RegExp(U(t)+"([^]*?)"+U(t),"gm"),i=(e=e.replace(t,"")).split("\r"),t=e.split("\n"),e=1<t.length&&t[0].length<i[0].length;if(1===i.length||e)return"\n";for(var r=0,n=0;n<i.length;n++)"\n"===i[n][0]&&r++;return r>=i.length/2?"\r\n":"\r"}}function U(e){return e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}function E(C){var S=(C=C||{}).delimiter,O=C.newline,x=C.comments,I=C.step,A=C.preview,T=C.fastMode,D=null,L=!1,F=null==C.quoteChar?'"':C.quoteChar,j=F;if(void 0!==C.escapeChar&&(j=C.escapeChar),("string"!=typeof S||-1<v.BAD_DELIMITERS.indexOf(S))&&(S=","),x===S)throw new Error("Comment character same as delimiter");!0===x?x="#":("string"!=typeof x||-1<v.BAD_DELIMITERS.indexOf(x))&&(x=!1),"\n"!==O&&"\r"!==O&&"\r\n"!==O&&(O="\n");var z=0,M=!1;this.parse=function(i,t,r){if("string"!=typeof i)throw new Error("Input must be a string");var n=i.length,e=S.length,s=O.length,a=x.length,o=q(I),h=[],u=[],d=[],f=z=0;if(!i)return w();if(T||!1!==T&&-1===i.indexOf(F)){for(var l=i.split(O),c=0;c<l.length;c++){if(d=l[c],z+=d.length,c!==l.length-1)z+=O.length;else if(r)return w();if(!x||d.substring(0,a)!==x){if(o){if(h=[],k(d.split(S)),R(),M)return w()}else k(d.split(S));if(A&&A<=c)return h=h.slice(0,A),w(!0)}}return w()}for(var p=i.indexOf(S,z),g=i.indexOf(O,z),_=new RegExp(U(j)+U(F),"g"),m=i.indexOf(F,z);;)if(i[z]===F)for(m=z,z++;;){if(-1===(m=i.indexOf(F,m+1)))return r||u.push({type:"Quotes",code:"MissingQuotes",message:"Quoted field unterminated",row:h.length,index:z}),E();if(m===n-1)return E(i.substring(z,m).replace(_,F));if(F===j&&i[m+1]===j)m++;else if(F===j||0===m||i[m-1]!==j){-1!==p&&p<m+1&&(p=i.indexOf(S,m+1));var y=v(-1===(g=-1!==g&&g<m+1?i.indexOf(O,m+1):g)?p:Math.min(p,g));if(i.substr(m+1+y,e)===S){d.push(i.substring(z,m).replace(_,F)),i[z=m+1+y+e]!==F&&(m=i.indexOf(F,z)),p=i.indexOf(S,z),g=i.indexOf(O,z);break}y=v(g);if(i.substring(m+1+y,m+1+y+s)===O){if(d.push(i.substring(z,m).replace(_,F)),b(m+1+y+s),p=i.indexOf(S,z),m=i.indexOf(F,z),o&&(R(),M))return w();if(A&&h.length>=A)return w(!0);break}u.push({type:"Quotes",code:"InvalidQuotes",message:"Trailing quote on quoted field is malformed",row:h.length,index:z}),m++}}else if(x&&0===d.length&&i.substring(z,z+a)===x){if(-1===g)return w();z=g+s,g=i.indexOf(O,z),p=i.indexOf(S,z)}else if(-1!==p&&(p<g||-1===g))d.push(i.substring(z,p)),z=p+e,p=i.indexOf(S,z);else{if(-1===g)break;if(d.push(i.substring(z,g)),b(g+s),o&&(R(),M))return w();if(A&&h.length>=A)return w(!0)}return E();function k(e){h.push(e),f=z}function v(e){var t=0;return t=-1!==e&&(e=i.substring(m+1,e))&&""===e.trim()?e.length:t}function E(e){return r||(void 0===e&&(e=i.substring(z)),d.push(e),z=n,k(d),o&&R()),w()}function b(e){z=e,k(d),d=[],g=i.indexOf(O,z)}function w(e){if(C.header&&!t&&h.length&&!L){var s=h[0],a=Object.create(null),o=new Set(s);let n=!1;for(let r=0;r<s.length;r++){let i=P(s[r]);if(a[i=q(C.transformHeader)?C.transformHeader(i,r):i]){let e,t=a[i];for(;e=i+"_"+t,t++,o.has(e););o.add(e),s[r]=e,a[i]++,n=!0,(D=null===D?{}:D)[e]=i}else a[i]=1,s[r]=i;o.add(i)}n&&console.warn("Duplicate headers found and renamed."),L=!0}return{data:h,errors:u,meta:{delimiter:S,linebreak:O,aborted:M,truncated:!!e,cursor:f+(t||0),renamedHeaders:D}}}function R(){I(w()),h=[],u=[]}},this.abort=function(){M=!0},this.getCharIndex=function(){return z}}function g(e){var t=e.data,i=o[t.workerId],r=!1;if(t.error)i.userError(t.error,t.file);else if(t.results&&t.results.data){var n={abort:function(){r=!0,_(t.workerId,{data:[],errors:[],meta:{aborted:!0}})},pause:m,resume:m};if(q(i.userStep)){for(var s=0;s<t.results.data.length&&(i.userStep({data:t.results.data[s],errors:t.results.errors,meta:t.results.meta},n),!r);s++);delete t.results}else q(i.userChunk)&&(i.userChunk(t.results,n,t.file),delete t.results)}t.finished&&!r&&_(t.workerId,t.results)}function _(e,t){var i=o[e];q(i.userComplete)&&i.userComplete(t),i.terminate(),delete o[e]}function m(){throw new Error("Not implemented.")}function b(e){if("object"!=typeof e||null===e)return e;var t,i=Array.isArray(e)?[]:{};for(t in e)i[t]=b(e[t]);return i}function y(e,t){return function(){e.apply(t,arguments)}}function q(e){return"function"==typeof e}return v.parse=function(e,t){var i=(t=t||{}).dynamicTyping||!1;q(i)&&(t.dynamicTypingFunction=i,i={});if(t.dynamicTyping=i,t.transform=!!q(t.transform)&&t.transform,!t.worker||!v.WORKERS_SUPPORTED)return i=null,v.NODE_STREAM_INPUT,"string"==typeof e?(e=P(e),i=new(t.download?f:c)(t)):!0===e.readable&&q(e.read)&&q(e.on)?i=new p(t):(n.File&&e instanceof File||e instanceof Object)&&(i=new l(t)),i.stream(e);(i=(()=>{var e;return!!v.WORKERS_SUPPORTED&&(e=(()=>{var e=n.URL||n.webkitURL||null,t=r.toString();return v.BLOB_URL||(v.BLOB_URL=e.createObjectURL(new Blob(["var global = (function() { if (typeof self !== 'undefined') { return self; } if (typeof window !== 'undefined') { return window; } if (typeof global !== 'undefined') { return global; } return {}; })(); global.IS_PAPA_WORKER=true; ","(",t,")();"],{type:"text/javascript"})))})(),(e=new n.Worker(e)).onmessage=g,e.id=h++,o[e.id]=e)})()).userStep=t.step,i.userChunk=t.chunk,i.userComplete=t.complete,i.userError=t.error,t.step=q(t.step),t.chunk=q(t.chunk),t.complete=q(t.complete),t.error=q(t.error),delete t.worker,i.postMessage({input:e,config:t,workerId:i.id})},v.unparse=function(e,t){var s=!1,_=!0,m=",",y="\r\n",a='"',o=a+a,i=!1,r=null,h=!1,u=((()=>{if("object"==typeof t){if("string"!=typeof t.delimiter||v.BAD_DELIMITERS.filter(function(e){return-1!==t.delimiter.indexOf(e)}).length||(m=t.delimiter),"boolean"!=typeof t.quotes&&"function"!=typeof t.quotes&&!Array.isArray(t.quotes)||(s=t.quotes),"boolean"!=typeof t.skipEmptyLines&&"string"!=typeof t.skipEmptyLines||(i=t.skipEmptyLines),"string"==typeof t.newline&&(y=t.newline),"string"==typeof t.quoteChar&&(a=t.quoteChar,o=a+a),"boolean"==typeof t.header&&(_=t.header),Array.isArray(t.columns)){if(0===t.columns.length)throw new Error("Option columns is empty");r=t.columns}void 0!==t.escapeChar&&(o=t.escapeChar+a),t.escapeFormulae instanceof RegExp?h=t.escapeFormulae:"boolean"==typeof t.escapeFormulae&&t.escapeFormulae&&(h=/^[=+\-@\t\r].*$/)}})(),new RegExp(U(a),"g"));"string"==typeof e&&(e=JSON.parse(e));if(Array.isArray(e)){if(!e.length||Array.isArray(e[0]))return n(null,e,i);if("object"==typeof e[0])return n(r||Object.keys(e[0]),e,i)}else if("object"==typeof e)return"string"==typeof e.data&&(e.data=JSON.parse(e.data)),Array.isArray(e.data)&&(e.fields||(e.fields=e.meta&&e.meta.fields||r),e.fields||(e.fields=Array.isArray(e.data[0])?e.fields:"object"==typeof e.data[0]?Object.keys(e.data[0]):[]),Array.isArray(e.data[0])||"object"==typeof e.data[0]||(e.data=[e.data])),n(e.fields||[],e.data||[],i);throw new Error("Unable to serialize unrecognized input");function n(e,t,i){var r="",n=("string"==typeof e&&(e=JSON.parse(e)),"string"==typeof t&&(t=JSON.parse(t)),Array.isArray(e)&&0<e.length),s=!Array.isArray(t[0]);if(n&&_){for(var a=0;a<e.length;a++)0<a&&(r+=m),r+=k(e[a],a);0<t.length&&(r+=y)}for(var o=0;o<t.length;o++){var h=(n?e:t[o]).length,u=!1,d=n?0===Object.keys(t[o]).length:0===t[o].length;if(i&&!n&&(u="greedy"===i?""===t[o].join("").trim():1===t[o].length&&0===t[o][0].length),"greedy"===i&&n){for(var f=[],l=0;l<h;l++){var c=s?e[l]:l;f.push(t[o][c])}u=""===f.join("").trim()}if(!u){for(var p=0;p<h;p++){0<p&&!d&&(r+=m);var g=n&&s?e[p]:p;r+=k(t[o][g],p)}o<t.length-1&&(!i||0<h&&!d)&&(r+=y)}}return r}function k(e,t){var i,r,n;return null==e?"":e.constructor===Date?JSON.stringify(e).slice(1,25):(n=!1,h&&"string"==typeof e&&h.test(e)&&(e="'"+e,n=!0),r=(i=e.toString()).replace(u,o),(n=n||!0===s||"function"==typeof s&&s(e,t)||Array.isArray(s)&&s[t]||((e,t)=>{for(var i=0;i<t.length;i++)if(-1<e.indexOf(t[i]))return!0;return!1})(r,v.BAD_DELIMITERS)||-1<r.indexOf(m)||-1<i.indexOf(a)||" "===r.charAt(0)||" "===r.charAt(r.length-1))?a+r+a:r)}},v.RECORD_SEP=String.fromCharCode(30),v.UNIT_SEP=String.fromCharCode(31),v.BYTE_ORDER_MARK="\ufeff",v.BAD_DELIMITERS=["\r","\n",'"',v.BYTE_ORDER_MARK],v.WORKERS_SUPPORTED=!s&&!!n.Worker,v.NODE_STREAM_INPUT=1,v.LocalChunkSize=10485760,v.RemoteChunkSize=5242880,v.DefaultDelimiter=",",v.Parser=E,v.ParserHandle=i,v.NetworkStreamer=f,v.FileStreamer=l,v.StringStreamer=c,v.ReadableStreamStreamer=p,n.jQuery&&((d=n.jQuery).fn.parse=function(o){var i=o.config||{},h=[];return this.each(function(e){if(!("INPUT"===d(this).prop("tagName").toUpperCase()&&"file"===d(this).attr("type").toLowerCase()&&n.FileReader)||!this.files||0===this.files.length)return!0;for(var t=0;t<this.files.length;t++)h.push({file:this.files[t],inputElem:this,instanceConfig:d.extend({},i)})}),e(),this;function e(){if(0===h.length)q(o.complete)&&o.complete();else{var e,t,i,r,n=h[0];if(q(o.before)){var s=o.before(n.file,n.inputElem);if("object"==typeof s){if("abort"===s.action)return e="AbortError",t=n.file,i=n.inputElem,r=s.reason,void(q(o.error)&&o.error({name:e},t,i,r));if("skip"===s.action)return void u();"object"==typeof s.config&&(n.instanceConfig=d.extend(n.instanceConfig,s.config))}else if("skip"===s)return void u()}var a=n.instanceConfig.complete;n.instanceConfig.complete=function(e){q(a)&&a(e,n.file,n.inputElem),u()},v.parse(n.file,n.instanceConfig)}}function u(){h.splice(0,1),e()}}),a&&(n.onmessage=function(e){e=e.data;void 0===v.WORKER_ID&&e&&(v.WORKER_ID=e.workerId);"string"==typeof e.input?n.postMessage({workerId:v.WORKER_ID,results:v.parse(e.input,e.config),finished:!0}):(n.File&&e.input instanceof File||e.input instanceof Object)&&(e=v.parse(e.input,e.config))&&n.postMessage({workerId:v.WORKER_ID,results:e,finished:!0})}),(f.prototype=Object.create(u.prototype)).constructor=f,(l.prototype=Object.create(u.prototype)).constructor=l,(c.prototype=Object.create(c.prototype)).constructor=c,(p.prototype=Object.create(u.prototype)).constructor=p,v});
+</script>
+<style>
+  :root{
+    color-scheme: dark;
+    --page: #0a0b0d;
+    --page-2: #0d0f12;
+    --surface: #14161a;
+    --surface-2: #1a1d22;
+    --glass: rgba(255,255,255,0.035);
+    --border: rgba(255,255,255,0.09);
+    --border-soft: rgba(255,255,255,0.055);
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3987e5;       /* dentro de la renta / interactivo */
+    --accent-glow: rgba(57,135,229,0.35);
+    --accent2: #d55181;      /* excedente / costo */
+    --accent2-glow: rgba(213,81,129,0.35);
+    --area-1: #3987e5;
+    --area-2: #d95926;
+    --area-3: #199e70;
+    --area-4: #c98500;
+    --epson: #9085e9;        /* impresión a color Epson (fuera del contrato Kyocera) */
+    --good: #0ca30c;
+    --radius: 14px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--page);color:var(--ink);font-family:var(--font);}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(1100px 600px at 12% -10%, rgba(57,135,229,0.14), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, rgba(213,81,129,0.10), transparent 55%),
+      linear-gradient(180deg, var(--page-2), var(--page) 40%);
+  }
+  ::selection{ background: var(--accent-glow); }
+  a{color:var(--accent);}
+  .tabular{ font-variant-numeric: tabular-nums; }
+  .wrap{ max-width: 1180px; margin: 0 auto; padding: 48px 32px 96px; }
+  .hidden{ display:none !important; }
+
+  /* ---------- Utilidad: contenedores de vidrio ---------- */
+  .glass{
+    background: linear-gradient(180deg, var(--glass), rgba(255,255,255,0.015));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* ---------- Pantalla de carga ---------- */
+  #setup .setup-head{ display:flex; align-items:center; gap:14px; margin-bottom: 6px; }
+  .badge-dot{ width:9px; height:9px; border-radius:50%; background: var(--accent); box-shadow: 0 0 12px 2px var(--accent-glow); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1);} 50%{ opacity:.55; transform:scale(0.8);} }
+  .eyebrow{ font-size:12.5px; letter-spacing:0.16em; text-transform:uppercase; color: var(--ink-muted); font-weight:600; }
+  #setup h1{ font-size: 34px; font-weight: 800; letter-spacing:-0.01em; margin: 10px 0 8px; line-height:1.15; }
+  #setup p.lead{ color: var(--ink-2); font-size:15px; line-height:1.6; max-width: 640px; margin:0 0 36px; }
+
+  .meta-row{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+  .field{ padding:14px 16px; }
+  .field label{ display:block; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-muted); margin-bottom:6px; }
+  .field input{
+    width:100%; background: transparent; border: none; color: var(--ink); font-family: var(--font);
+    font-size:15px; font-weight:600; outline:none; padding:0; font-variant-numeric: tabular-nums;
+  }
+  .field input::placeholder{ color: var(--ink-muted); font-weight:400; }
+  .field.mini{ padding:10px 14px; }
+  .field.mini label{ margin-bottom:4px; }
+  .field.mini input{ font-size:13.5px; }
+
+  .drop-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .dropzone{
+    position:relative; padding:22px 22px 20px; cursor:pointer; transition: border-color .2s, background .2s, transform .15s;
+    overflow:hidden;
+  }
+  .dropzone:hover{ border-color: rgba(57,135,229,0.5); }
+  .dropzone.drag{ border-color: var(--accent); background: rgba(57,135,229,0.08); transform: scale(1.005); }
+  .dropzone.filled{ border-color: rgba(12,163,12,0.45); }
+  .dropzone input[type=file]{ display:none; }
+  .dz-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .dz-area{ font-size:17px; font-weight:700; }
+  .dz-swatch{ width:10px; height:10px; border-radius:3px; }
+  .dz-status{ margin-top:10px; font-size:13px; color: var(--ink-muted); line-height:1.5; min-height: 18px; }
+  .dz-status .ok{ color: var(--good); font-weight:600; }
+  .dz-status .err{ color: var(--accent2); font-weight:600; }
+  .dz-hint{ font-size:12px; color: var(--ink-muted); margin-top:2px; }
+  .dz-check{
+    position:absolute; top:16px; right:18px; width:22px; height:22px; border-radius:50%;
+    background: var(--good); display:none; align-items:center; justify-content:center; font-size:13px; color:#04250b; font-weight:900;
+  }
+  .dropzone.filled .dz-check{ display:flex; }
+
+  .contract-title{ font-size:12.5px; letter-spacing:0.1em; text-transform:uppercase; color: var(--ink-muted); margin: 34px 0 12px; font-weight:700; }
+  .contract-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 36px; }
+
+  .section-lead{ color: var(--ink-2); font-size:13.5px; line-height:1.6; max-width:720px; margin:0 0 18px; }
+  #epsonList{ display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+  .epson-row{ position:relative; padding:16px 18px; }
+  .epson-grid{ display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; gap:12px; }
+  .epson-remove{
+    position:absolute; top:10px; right:12px; background:transparent; border:none; color: var(--ink-muted);
+    cursor:pointer; font-size:14px; padding:4px; line-height:1;
+  }
+  .epson-remove:hover{ color: var(--accent2); }
+
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-family: var(--font); font-weight:700; letter-spacing:0.02em;
+    border-radius: 10px; transition: transform .12s ease, box-shadow .2s ease, opacity .2s ease, background .2s;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--accent), #6aa6ec);
+    color:#04101f; padding:15px 26px; font-size:14.5px; box-shadow: 0 8px 30px -8px var(--accent-glow);
+  }
+  .btn-primary:disabled{ opacity:.35; cursor:not-allowed; box-shadow:none; }
+  .btn-primary:not(:disabled):hover{ box-shadow: 0 10px 34px -6px var(--accent-glow); }
+  .btn-ghost{
+    background: transparent; border:1px solid var(--border); color: var(--ink-2); padding:11px 18px; font-size:13px;
+  }
+  .btn-ghost:hover{ border-color: rgba(255,255,255,0.25); color: var(--ink); }
+  .btn-outline-accent{
+    background: rgba(57,135,229,0.1); border:1px solid rgba(57,135,229,0.4); color: #bcd9fb; padding:11px 18px; font-size:13px;
+  }
+  .btn-outline-accent:hover{ background: rgba(57,135,229,0.18); }
+  .setup-actions{ display:flex; align-items:center; gap:16px; }
+  #setupError{ color: var(--accent2); font-size:13.5px; margin-top:14px; display:none; }
+
+  /* ---------- Dashboard ---------- */
+  #dash header.top{
+    display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap;
+    padding-bottom: 18px; border-bottom: 1px solid var(--border-soft);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase; color: var(--ink-muted); font-weight:700; }
+  .top-actions{ display:flex; gap:10px; align-items:center; }
+  .gen-note{ font-size:12.5px; color: var(--ink-muted); margin-right:6px; }
+
+  #dash h1.title{ font-size: 46px; font-weight:800; letter-spacing:-0.015em; line-height:1.06; margin: 30px 0 10px; }
+  .subline{ color: var(--ink-2); font-size:15.5px; max-width: 680px; line-height:1.6; margin:0 0 44px; }
+
+  .kpi-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 46px; }
+  .kpi{ padding: 22px 22px 20px; opacity:0; transform: translateY(10px); animation: rise .5s ease forwards; }
+  .kpi:nth-child(1){ animation-delay:.02s; } .kpi:nth-child(2){ animation-delay:.08s; }
+  .kpi:nth-child(3){ animation-delay:.14s; } .kpi:nth-child(4){ animation-delay:.2s; }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+  .kpi-value{ font-size: 32px; font-weight:800; line-height:1; letter-spacing:-0.01em; }
+  .kpi-value.accent2{ color: var(--accent2); text-shadow: 0 0 24px var(--accent2-glow); }
+  .kpi-label{ font-size:12px; letter-spacing:0.09em; text-transform:uppercase; color: var(--ink-muted); margin-top:10px; font-weight:700; }
+  .kpi-sub{ font-size:13px; color: var(--ink-2); margin-top:5px; }
+
+  .section{ margin-top: 56px; }
+  .section-head{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .section-head h2{ font-size:22px; font-weight:800; margin:0; letter-spacing:-0.01em; }
+  .section-note{ font-size:13.5px; color: var(--ink-muted); }
+
+  .consumo-bar{ height:22px; border-radius:6px; overflow:hidden; display:flex; background: var(--surface-2); margin-top:20px; border:1px solid var(--border-soft); }
+  .consumo-seg{ height:100%; width:0%; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+  .seg-incl{ background: linear-gradient(90deg, var(--accent), #6ab0f2); box-shadow: inset 0 0 20px rgba(255,255,255,0.15); }
+  .seg-exc{ background: linear-gradient(90deg, var(--accent2), #ef7fa6); }
+  .legend-row{ display:flex; gap:26px; margin-top:12px; font-size:13.5px; color: var(--ink-2); flex-wrap:wrap; }
+  .legend-dot{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:7px; vertical-align:middle; }
+
+  .area-list{ display:flex; flex-direction:column; gap: 14px; margin-top: 26px; }
+  .area-card{
+    padding: 20px 22px; cursor:pointer; transition: border-color .18s, transform .15s, background .18s;
+    opacity:0; transform: translateY(8px); animation: rise .45s ease forwards;
+  }
+  .area-card:nth-child(1){ animation-delay:.05s; } .area-card:nth-child(2){ animation-delay:.11s; }
+  .area-card:nth-child(3){ animation-delay:.17s; } .area-card:nth-child(4){ animation-delay:.23s; }
+  .area-card:hover{ border-color: rgba(57,135,229,0.45); background: rgba(57,135,229,0.05); transform: translateX(2px); }
+  .area-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .area-top{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .area-swatch{ width:11px; height:11px; border-radius:3px; flex:none; }
+  .area-name{ font-size:19px; font-weight:800; }
+  .area-meta{ font-size:13px; color: var(--ink-muted); }
+  .area-costexc{ margin-left:auto; font-size:19px; font-weight:800; color: var(--accent2); }
+  .area-costexc-sub{ font-size:12.5px; color: var(--ink-muted); }
+  .area-bar{ height:10px; border-radius:5px; overflow:hidden; display:flex; background: var(--surface-2); margin-top:14px; }
+  .area-bottom{ display:flex; gap:22px; margin-top:10px; font-size:13px; color: var(--ink-2); flex-wrap:wrap; }
+  .area-bottom .sp{ margin-left:auto; }
+  .area-arrow{ font-size:13px; color: var(--accent); font-weight:700; }
+
+  table.tbl{ width:100%; border-collapse:collapse; margin-top:22px; font-size:14px; }
+  table.tbl thead th{
+    text-align:left; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-muted);
+    padding: 0 0 10px; border-bottom: 1px solid var(--border);
+    font-weight:700;
+  }
+  table.tbl tbody td{ padding: 11px 0; border-bottom: 1px solid var(--border-soft); vertical-align:middle; }
+  table.tbl tbody tr{ opacity:0; animation: rise .35s ease forwards; }
+  table.tbl .rank{ color: var(--ink-muted); width:34px; }
+  table.tbl .name{ font-weight:700; }
+  table.tbl .num{ text-align:right; font-weight:700; }
+  table.tbl .num.dim{ font-weight:500; color: var(--ink-2); }
+  .mini-bar-wrap{ width:120px; height:7px; background: var(--surface-2); border-radius:4px; overflow:hidden; }
+  .mini-bar{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), #6ab0f2); transition: width .9s cubic-bezier(.16,1,.3,1); border-radius:4px; }
+  .tag{ display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; background: var(--surface-2); border:1px solid var(--border); color: var(--ink-2); font-weight:600; }
+
+  footer.foot{ margin-top: 72px; font-size:12.5px; color: var(--ink-muted); line-height:1.7; border-top:1px solid var(--border-soft); padding-top:20px; }
+
+  /* ---------- Detalle de área ---------- */
+  #detail .back{ margin-bottom: 26px; }
+  .detail-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; }
+  .detail-title-row{ display:flex; align-items:center; gap:12px; }
+  #detail h2.title{ font-size:36px; font-weight:800; margin:0; letter-spacing:-0.01em; }
+  .detail-sub{ font-size:13.5px; color: var(--ink-muted); margin-top:6px; }
+  .detail-stats{ display:flex; gap:34px; text-align:right; flex-wrap:wrap; }
+  .dstat-val{ font-size:24px; font-weight:800; }
+  .dstat-label{ font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-muted); margin-top:3px; }
+
+  /* ---------- Impresión / PDF ejecutivo ---------- */
+  @media print{
+    @page{ size: letter; margin: 12mm 13mm; background:#fff; }
+    html{ background:#ffffff !important; }
+    body{ background:#ffffff !important; background-image:none !important; }
+    *{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      box-shadow:none !important; text-shadow:none !important; animation:none !important; transition:none !important;
+    }
+    #setup, #detail, .no-print, .area-arrow{ display:none !important; }
+    #dash{ display:block !important; background:#ffffff !important; }
+    .wrap{ max-width:none; padding:0; margin:0; background:#ffffff !important; }
+    :root{
+      --page:#ffffff; --page-2:#ffffff; --surface:#ffffff; --surface-2:#eeeeec; --glass:#ffffff; --border: #ddd; --border-soft:#e6e5e2;
+      --ink:#111111; --ink-2:#3f3e3a; --ink-muted:#6d6b64; --epson:#4a3aa7;
+    }
+    .glass{ background:#fff; border:none; }
+
+    #dash header.top{ border-bottom:2px solid #111; padding-bottom:7px; }
+    .brand{ font-size:10px; }
+    .gen-note{ font-size:10px; }
+    #dash h1.title{ font-size:23px; font-weight:800; margin:13px 0 5px; }
+    .subline{ font-size:11px; line-height:1.45; margin:0 0 16px; }
+
+    /* KPIs: una sola franja continua, no 4 cajas sueltas */
+    .kpi-grid{ grid-template-columns: repeat(4,1fr) !important; gap:0; margin:0 0 18px; border-top:1.5px solid #111; border-bottom:1px solid #ccc; padding:9px 0; }
+    .kpi{ padding:0 14px; opacity:1 !important; transform:none !important; border-right:1px solid #ddd; }
+    .kpi:first-child{ padding-left:0; }
+    .kpi:last-child{ border-right:none; }
+    .kpi-value{ font-size:17px; }
+    .kpi-label{ font-size:9px; margin-top:4px; }
+    .kpi-sub{ font-size:9.5px; margin-top:2px; }
+    .kpi-value.accent2{ color:#a3305d; text-shadow:none; }
+
+    .section{ margin-top:16px; break-inside: avoid-page; }
+    .section-head h2{ font-size:13.5px; }
+    .section-note{ font-size:10px; }
+
+    .consumo-bar{ height:11px; margin-top:8px; border:1px solid #d8d7d3; border-radius:3px; }
+    .legend-row{ font-size:10px; margin-top:6px; gap:16px; }
+
+    /* Áreas: lista compacta con divisor fino, no tarjetas flotantes */
+    .area-list{ gap:0; margin-top:8px; }
+    .area-card{
+      padding:8px 0; cursor:default; opacity:1 !important; transform:none !important;
+      border-bottom:1px solid #e6e5e2; break-inside: avoid;
+    }
+    .area-card:last-child{ border-bottom:none; }
+    .area-top{ gap:10px; }
+    .area-name{ font-size:12.5px; }
+    .area-meta{ font-size:10px; }
+    .area-costexc{ font-size:12.5px; }
+    .area-costexc-sub{ font-size:9.5px; }
+    .area-bar{ height:6px; margin-top:6px; border-radius:2px; }
+    .area-bottom{ font-size:10px; margin-top:5px; }
+
+    table.tbl{ font-size:10.5px; margin-top:10px; }
+    table.tbl thead th{ padding-bottom:5px; font-size:9px; }
+    table.tbl tbody td{ padding:5px 0; }
+    table.tbl tbody tr{ opacity:1 !important; break-inside: avoid; }
+    .tag{ font-size:9px; padding:2px 7px; }
+    .mini-bar-wrap{ width:90px; height:5px; }
+
+    footer.foot{ margin-top:16px; font-size:9px; padding-top:9px; line-height:1.5; }
+  }
+
+  @media screen and (max-width: 860px){
+    .meta-row{ grid-template-columns: repeat(2,1fr); }
+    .drop-grid, .contract-grid, .kpi-grid{ grid-template-columns: 1fr 1fr; }
+    .epson-grid{ grid-template-columns: 1fr 1fr; }
+    #dash h1.title{ font-size:32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============ PANTALLA DE CARGA ============ -->
+  <section id="setup">
+    <div class="setup-head"><span class="badge-dot"></span><span class="eyebrow">Pipeline de datos · Kyocera Net Viewer</span></div>
+    <h1>Reporte mensual de impresión</h1>
+    <p class="lead">Exporta los 4 CSV de contadores de cuenta desde Kyocera Net Viewer (uno por área) y súbelos aquí. El reporte —costos, ranking y detalle por persona— se genera al instante, en el navegador, sin subir nada a ningún servidor.</p>
+
+    <div class="meta-row">
+      <div class="field glass"><label>Periodo</label><input id="inPeriodo" type="text" placeholder="Agosto 2026"></div>
+      <div class="field glass"><label>Generado el</label><input id="inGenerado" type="text" placeholder="08/08/2026"></div>
+      <div class="field glass"><label>Renta mensual (MXN)</label><input id="inRenta" type="number" step="0.01" value="8167.95"></div>
+      <div class="field glass"><label>Páginas incluidas</label><input id="inIncluidas" type="number" step="1" value="24000"></div>
+      <div class="field glass"><label>Tarifa excedente (MXN/pág)</label><input id="inTarifa" type="number" step="0.01" value="0.20"></div>
+    </div>
+
+    <div class="contract-title">Carga los 4 CSV por área</div>
+    <div class="drop-grid" id="dropGrid"></div>
+
+    <div class="contract-title">Impresión a color · Epson (opcional)</div>
+    <p class="section-lead">Las Epson no tienen un contador por cuenta como las Kyocera. Anota lo que marque el contador interno de cada equipo antes de reiniciarlo, junto con el costo del kit de tinta y cuántas páginas rinde ese kit — con eso se calcula el costo por página. Si generas el reporte a mitad de mes, anota la lectura tal como esté ese día; se marca con la fecha para que quede claro que es un corte parcial.</p>
+    <div id="epsonList"></div>
+    <button class="btn btn-ghost" id="btnAddEpson" type="button" style="margin-bottom:34px;">+ Agregar impresora Epson</button>
+
+    <div id="setupError"></div>
+
+    <div class="setup-actions" style="margin-top:30px;">
+      <button class="btn btn-primary" id="btnGenerar" disabled>Generar reporte →</button>
+      <span class="gen-note" id="setupStatus">0 de 4 áreas cargadas</span>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="dash" class="hidden">
+    <header class="top">
+      <div class="brand"><span class="badge-dot"></span> Reporte mensual · <span id="hPeriodo"></span></div>
+      <div class="top-actions">
+        <span class="gen-note">Generado el <span id="hGenerado"></span></span>
+        <button class="btn btn-outline-accent no-print" id="btnZip">⇩ Respaldo ZIP (CSV + reporte)</button>
+        <button class="btn btn-outline-accent no-print" id="btnExport">⇩ Exportar HTML (OneDrive/SharePoint)</button>
+        <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Descargar PDF ejecutivo</button>
+        <button class="btn btn-ghost no-print" id="btnReset">Nuevo reporte</button>
+      </div>
+    </header>
+
+    <h1 class="title">Costo de impresión del mes</h1>
+    <p class="subline" id="pIntro"></p>
+
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Consumo contra lo contratado</h2>
+        <span class="section-note" id="usoResumen"></span>
+      </div>
+      <div class="consumo-bar"><div class="consumo-seg seg-incl" id="segIncl"></div><div class="consumo-seg seg-exc" id="segExc"></div></div>
+      <div class="legend-row">
+        <span><span class="legend-dot" style="background:var(--accent)"></span>Dentro de la renta · <span id="legDentro" class="tabular"></span></span>
+        <span><span class="legend-dot" style="background:var(--accent2)"></span>Excedente · <span id="legExcedente" class="tabular"></span></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Qué área genera el gasto</h2>
+        <span class="section-note">Clic en un área para ver el detalle por persona</span>
+      </div>
+      <div class="area-list" id="areaList"></div>
+    </div>
+
+    <div class="section hidden" id="epsonSection">
+      <div class="section-head">
+        <h2>Impresión a color · Epson</h2>
+        <span class="section-note">Lectura manual del contador interno de cada equipo</span>
+      </div>
+      <div class="area-list" id="epsonRowsOut"></div>
+      <div class="section-note" id="epsonTotalOut" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Top <span id="topNShown"></span> usuarios de la empresa</h2></div>
+      <table class="tbl">
+        <thead><tr><th style="width:36px;">#</th><th>Persona</th><th>Área</th><th style="width:130px;"></th><th style="text-align:right;">Páginas</th><th style="text-align:right;">Costo atribuido</th></tr></thead>
+        <tbody id="topBody"></tbody>
+      </table>
+    </div>
+
+    <footer class="foot" id="footNote"></footer>
+  </section>
+
+  <!-- ============ DETALLE DE ÁREA ============ -->
+  <section id="detail" class="hidden">
+    <button class="btn btn-ghost back no-print" id="btnBack">← Volver a áreas</button>
+    <div class="detail-head">
+      <div>
+        <div class="detail-title-row"><span class="area-swatch" id="detailSwatch"></span><h2 class="title" id="detailName"></h2></div>
+        <div class="detail-sub" id="detailSub"></div>
+      </div>
+      <div class="detail-stats">
+        <div><div class="dstat-val tabular" id="detailTotal"></div><div class="dstat-label">Páginas</div></div>
+        <div><div class="dstat-val tabular" id="detailExc" style="color:var(--accent2)"></div><div class="dstat-label">Excedente</div></div>
+        <div><div class="dstat-val tabular" id="detailCosto" style="color:var(--accent)"></div><div class="dstat-label">Costo total</div></div>
+      </div>
+    </div>
+    <table class="tbl" style="margin-top:8px;">
+      <thead><tr><th style="width:36px;">#</th><th>Persona</th><th style="width:130px;"></th><th style="text-align:right;">Impresión</th><th style="text-align:right;">Copias</th><th style="text-align:right;">Total</th><th style="text-align:right;">Costo atribuido</th></tr></thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Copia del HTML tal como llegó (antes de que este script modifique el DOM).
+  // Se usa para generar el archivo exportado "con datos incrustados" que se comparte por OneDrive/SharePoint.
+  var PRISTINE_HTML = document.documentElement.outerHTML;
+
+  var AREAS = [
+    { key:'almacen', name:'Almacén', color:'var(--area-1)' },
+    { key:'admin', name:'Administración', color:'var(--area-2)' },
+    { key:'postventa', name:'Postventa', color:'var(--area-3)' },
+    { key:'operaciones', name:'Operaciones', color:'var(--area-4)' },
+  ];
+
+  var loaded = {}; // key -> parsed area object
+
+  // ---------- helpers ----------
+  function num(v){
+    if(v===undefined||v===null) return 0;
+    var s=String(v).trim().replace(/,/g,'');
+    var n=parseFloat(s);
+    return isNaN(n)?0:n;
+  }
+  function fmt(n){ return Math.round(n).toLocaleString('es-MX'); }
+  function mxn(n){ return n.toLocaleString('es-MX',{style:'currency',currency:'MXN'}); }
+  function todayMX(){
+    var d=new Date();
+    return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  }
+
+  // ---------- construir dropzones ----------
+  var dropGrid = document.getElementById('dropGrid');
+  AREAS.forEach(function(a){
+    var el = document.createElement('div');
+    el.className = 'dropzone glass';
+    el.innerHTML =
+      '<div class="dz-check">✓</div>' +
+      '<div class="dz-top"><span class="dz-area"><span class="dz-swatch" style="background:'+a.color+';display:inline-block;margin-right:8px;"></span>'+a.name+'</span></div>' +
+      '<div class="dz-hint">Arrastra el CSV aquí o haz clic para seleccionar</div>' +
+      '<div class="dz-status" id="status-'+a.key+'">Sin archivo</div>' +
+      '<input type="file" accept=".csv,text/csv" id="file-'+a.key+'">';
+    dropGrid.appendChild(el);
+
+    var input = el.querySelector('input[type=file]');
+    el.addEventListener('click', function(e){ if(e.target!==input) input.click(); });
+    ['dragenter','dragover'].forEach(function(ev){ el.addEventListener(ev, function(e){ e.preventDefault(); el.classList.add('drag'); }); });
+    ['dragleave','drop'].forEach(function(ev){ el.addEventListener(ev, function(e){ e.preventDefault(); el.classList.remove('drag'); }); });
+    el.addEventListener('drop', function(e){
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) handleFile(a, f, el);
+    });
+    input.addEventListener('change', function(e){
+      var f = e.target.files && e.target.files[0];
+      if(f) handleFile(a, f, el);
+    });
+  });
+
+  function handleFile(area, file, el){
+    var statusEl = document.getElementById('status-'+area.key);
+    statusEl.innerHTML = 'Leyendo…';
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var parsed = parseAreaCsv(evt.target.result, area.name);
+        if(parsed.people.length === 0){
+          statusEl.innerHTML = '<span class="err">No se encontraron cuentas con actividad en este archivo.</span>';
+          el.classList.remove('filled');
+          delete loaded[area.key];
+        } else {
+          parsed.rawCsv = evt.target.result;
+          parsed.filename = file.name;
+          loaded[area.key] = parsed;
+          el.classList.add('filled');
+          statusEl.innerHTML = '<span class="ok">'+parsed.activos+' personas activas</span> · Equipo '+(parsed.model||'—')+' · '+file.name;
+        }
+      } catch(err){
+        statusEl.innerHTML = '<span class="err">No se pudo leer el archivo: '+err.message+'</span>';
+        el.classList.remove('filled');
+        delete loaded[area.key];
+      }
+      updateSetupStatus();
+    };
+    reader.onerror = function(){
+      statusEl.innerHTML = '<span class="err">Error al leer el archivo.</span>';
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function parseAreaCsv(csvText, areaName){
+    var res = Papa.parse(csvText, { header:true, skipEmptyLines:true });
+    var rows = res.data;
+    var lastModel = '';
+    var people = [];
+    rows.forEach(function(row){
+      var modelRaw = (row['Nombre del modelo']||'').trim();
+      if(modelRaw) lastModel = modelRaw;
+      var name = (row['Nombre de cuenta']||'').trim();
+      if(!name) return; // regla 1
+      var imprimir = num(row['Imprimir (total)']);
+      var copia = num(row['Copia (total)']);
+      var escanear = num(row['Escanear (total)']);
+      var duplex = num(row['Dúplex']);
+      var simple = num(row['Simple']);
+      if(imprimir+copia+escanear === 0) return; // regla 2
+      people.push({ name:name, imprimir:imprimir, copia:copia, escanear:escanear, duplex:duplex, simple:simple, total:imprimir+copia });
+    });
+    people.sort(function(x,y){ return y.total - x.total; }); // regla 4
+    var totals = people.reduce(function(acc,p){
+      acc.imprimir+=p.imprimir; acc.copia+=p.copia; acc.escanear+=p.escanear;
+      acc.duplex+=p.duplex; acc.simple+=p.simple; acc.total+=p.total;
+      return acc;
+    }, {imprimir:0,copia:0,escanear:0,duplex:0,simple:0,total:0});
+    return { area:areaName, model:lastModel, people:people, totals:totals, activos:people.length };
+  }
+
+  // ---------- filas dinámicas de impresoras Epson ----------
+  var epsonContainer = document.getElementById('epsonList');
+  function addEpsonRow(){
+    var row = document.createElement('div');
+    row.className = 'epson-row glass';
+    row.innerHTML =
+      '<button class="epson-remove no-print" type="button" title="Quitar impresora">✕</button>' +
+      '<div class="epson-grid">' +
+        '<div class="field mini"><label>Nombre / área</label><input type="text" class="ep-name" placeholder="Recepción"></div>' +
+        '<div class="field mini"><label>Costo del kit (MXN)</label><input type="number" step="0.01" class="ep-kit" placeholder="450.00"></div>' +
+        '<div class="field mini"><label>Rendimiento (pág./kit)</label><input type="number" step="1" class="ep-yield" placeholder="1800"></div>' +
+        '<div class="field mini"><label>Páginas de este periodo</label><input type="number" step="1" class="ep-pages" placeholder="0"></div>' +
+        '<div class="field mini"><label>Fecha de lectura</label><input type="text" class="ep-fecha" placeholder="'+todayMX()+'"></div>' +
+      '</div>';
+    epsonContainer.appendChild(row);
+    row.querySelector('.epson-remove').addEventListener('click', function(){ row.remove(); });
+  }
+  document.getElementById('btnAddEpson').addEventListener('click', addEpsonRow);
+  addEpsonRow(); // arranca con una fila lista para llenar
+
+  function collectEpson(){
+    var rows = epsonContainer.querySelectorAll('.epson-row');
+    var printers = [];
+    rows.forEach(function(row){
+      var name = row.querySelector('.ep-name').value.trim();
+      var kit = num(row.querySelector('.ep-kit').value);
+      var yieldPages = num(row.querySelector('.ep-yield').value);
+      var pages = num(row.querySelector('.ep-pages').value);
+      var fecha = row.querySelector('.ep-fecha').value.trim() || todayMX();
+      if(!name && !pages && !kit) return; // fila vacía, ignorar
+      var costPerPage = (kit>0 && yieldPages>0) ? (kit/yieldPages) : null;
+      var costPeriod = costPerPage!==null ? costPerPage*pages : null;
+      printers.push({ name:name||'Epson', pages:pages, fecha:fecha, costPerPage:costPerPage, costPeriod:costPeriod });
+    });
+    return printers;
+  }
+
+  function updateSetupStatus(){
+    var n = Object.keys(loaded).length;
+    document.getElementById('setupStatus').textContent = n + ' de 4 áreas cargadas';
+    document.getElementById('btnGenerar').disabled = (n < 4);
+  }
+
+  // ---------- valores por defecto de periodo/generado ----------
+  document.getElementById('inGenerado').value = todayMX();
+
+  // ---------- generar reporte ----------
+  var REPORT = null; // { periodo, generado, renta, incluidas, tarifa, areas:[...] }
+
+  document.getElementById('btnGenerar').addEventListener('click', function(){
+    var errBox = document.getElementById('setupError');
+    errBox.style.display='none';
+    if(Object.keys(loaded).length < 4){ return; }
+    var periodo = document.getElementById('inPeriodo').value.trim() || 'Periodo actual';
+    var generado = document.getElementById('inGenerado').value.trim() || todayMX();
+    var renta = num(document.getElementById('inRenta').value) || 8167.95;
+    var incluidas = num(document.getElementById('inIncluidas').value) || 24000;
+    var tarifa = num(document.getElementById('inTarifa').value);
+    if(isNaN(tarifa)) tarifa = 0.20;
+
+    var areas = AREAS.map(function(a){ return loaded[a.key]; });
+    var epson = collectEpson();
+    REPORT = { periodo:periodo, generado:generado, renta:renta, incluidas:incluidas, tarifa:tarifa, areas:areas, epson:epson };
+    renderDashboard(REPORT);
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('dash').classList.remove('hidden');
+    document.getElementById('detail').classList.add('hidden');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+
+  document.getElementById('btnReset').addEventListener('click', function(){
+    document.getElementById('dash').classList.add('hidden');
+    document.getElementById('detail').classList.add('hidden');
+    document.getElementById('setup').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+
+  document.getElementById('btnPdf').addEventListener('click', function(){
+    window.print();
+  });
+
+  // ---------- helpers de exportación ----------
+  function safeFileToken(s){
+    return (s || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase().replace(/^_+|_+$/g,'');
+  }
+
+  // Construye el HTML autocontenido con los datos del reporte incrustados
+  // (mismo archivo que abre directo en el dashboard, sin pasar por la pantalla de carga).
+  function buildExportedHtmlString(){
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(PRISTINE_HTML, 'text/html');
+
+    var jsonStr = JSON.stringify(REPORT).replace(/<\//g, '<\\/'); // evita que se corte la etiqueta de cierre del script al incrustarlo
+
+    var dataScript = doc.createElement('script');
+    dataScript.type = 'application/json';
+    dataScript.id = 'embedded-report-data';
+    dataScript.textContent = jsonStr;
+    doc.body.appendChild(dataScript);
+
+    var bootScript = doc.createElement('script');
+    bootScript.id = 'embedded-boot';
+    bootScript.textContent =
+      "(function(){var d=document.getElementById('embedded-report-data');if(!d)return;" +
+      "try{var data=JSON.parse(d.textContent);if(window.__loadEmbeddedReport)window.__loadEmbeddedReport(data);}" +
+      "catch(e){console.error('No se pudo cargar el reporte incrustado', e);}})();";
+    doc.body.appendChild(bootScript);
+
+    return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  }
+
+  function downloadBlob(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  }
+
+  // ---------- exportar HTML con los datos incrustados (para OneDrive/SharePoint) ----------
+  document.getElementById('btnExport').addEventListener('click', function(){
+    if(!REPORT) return;
+    try{
+      var htmlStr = buildExportedHtmlString();
+      var blob = new Blob([htmlStr], { type:'text/html' });
+      var safePeriodo = safeFileToken(REPORT.periodo) || 'actual';
+      downloadBlob(blob, 'reporte_impresion_' + safePeriodo + '.html');
+    } catch(err){
+      alert('No se pudo exportar el archivo: ' + err.message);
+    }
+  });
+
+  // ---------- mini generador de ZIP (solo "store", sin compresión) ----------
+  var CRC_TABLE = (function(){
+    var t = [];
+    for (var n=0; n<256; n++){
+      var c = n;
+      for (var k=0; k<8; k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32Bytes(bytes){
+    var crc = 0xFFFFFFFF;
+    for (var i=0; i<bytes.length; i++){ crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8); }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zU16(v){ return new Uint8Array([v & 0xFF, (v >>> 8) & 0xFF]); }
+  function zU32(v){ return new Uint8Array([v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]); }
+
+  function buildZip(entries){ // entries: [{ name:string, bytes:Uint8Array }]
+    var encoder = new TextEncoder();
+    var localParts = [];
+    var centralParts = [];
+    var offset = 0;
+    var dosTime = zU16(0), dosDate = zU16(0x21); // fecha de referencia fija (no relevante para los datos)
+    var centralSize = 0;
+
+    entries.forEach(function(entry){
+      var nameBytes = encoder.encode(entry.name);
+      var data = entry.bytes;
+      var crc = crc32Bytes(data);
+
+      var local = [
+        zU32(0x04034b50), zU16(20), zU16(0), zU16(0), dosTime, dosDate,
+        zU32(crc), zU32(data.length), zU32(data.length), zU16(nameBytes.length), zU16(0)
+      ];
+      localParts.push.apply(localParts, local);
+      localParts.push(nameBytes, data);
+
+      var central = [
+        zU32(0x02014b50), zU16(20), zU16(20), zU16(0), zU16(0), dosTime, dosDate,
+        zU32(crc), zU32(data.length), zU32(data.length), zU16(nameBytes.length), zU16(0), zU16(0), zU16(0), zU16(0), zU32(0),
+        zU32(offset)
+      ];
+      centralParts.push.apply(centralParts, central);
+      centralParts.push(nameBytes);
+
+      var localHeaderSize = 30 + nameBytes.length + data.length;
+      offset += localHeaderSize;
+      centralSize += 46 + nameBytes.length;
+    });
+
+    var eocd = [
+      zU32(0x06054b50), zU16(0), zU16(0), zU16(entries.length), zU16(entries.length),
+      zU32(centralSize), zU32(offset), zU16(0)
+    ];
+
+    return new Blob(localParts.concat(centralParts, eocd), { type:'application/zip' });
+  }
+
+  function csvField(v){
+    var s = String(v===null||v===undefined ? '' : v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }
+
+  // ---------- respaldo ZIP: CSV originales + lecturas Epson + snapshot HTML ----------
+  document.getElementById('btnZip').addEventListener('click', function(){
+    if(!REPORT) return;
+    var rawAreas = AREAS.filter(function(a){ return loaded[a.key] && loaded[a.key].rawCsv; });
+    if(rawAreas.length < AREAS.length){
+      alert('El respaldo ZIP incluye los CSV originales tal como los subiste. Genera el reporte subiendo los 4 CSV en esta misma sesión antes de descargar el respaldo (si abriste este archivo desde un link compartido, ya no trae los CSV originales, solo los datos calculados).');
+      if(rawAreas.length === 0) return;
+    }
+    try{
+      var encoder = new TextEncoder();
+      var entries = [];
+      rawAreas.forEach(function(a){
+        var L = loaded[a.key];
+        entries.push({ name: (L.filename || (a.name + '.csv')), bytes: encoder.encode(L.rawCsv) });
+      });
+      if(REPORT.epson && REPORT.epson.length){
+        var lines = ['Nombre,Paginas,Fecha de lectura,Costo por pagina (MXN),Costo del periodo (MXN)'];
+        REPORT.epson.forEach(function(p){
+          lines.push([
+            csvField(p.name), csvField(p.pages), csvField(p.fecha),
+            csvField(p.costPerPage!==null ? p.costPerPage.toFixed(4) : ''),
+            csvField(p.costPeriod!==null ? p.costPeriod.toFixed(2) : '')
+          ].join(','));
+        });
+        entries.push({ name:'Epson_lecturas.csv', bytes: encoder.encode(lines.join('\r\n')) });
+      }
+      var htmlStr = buildExportedHtmlString();
+      var safePeriodo = safeFileToken(REPORT.periodo) || 'actual';
+      entries.push({ name: 'reporte_impresion_' + safePeriodo + '.html', bytes: encoder.encode(htmlStr) });
+
+      var zipBlob = buildZip(entries);
+      downloadBlob(zipBlob, 'respaldo_impresion_' + safePeriodo + '.zip');
+    } catch(err){
+      alert('No se pudo generar el respaldo ZIP: ' + err.message);
+    }
+  });
+
+  document.getElementById('btnBack').addEventListener('click', function(){
+    document.getElementById('detail').classList.add('hidden');
+    document.getElementById('dash').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+
+  // ---------- animar números (count-up) ----------
+  function animateNumber(el, target, formatter, duration){
+    duration = duration || 900;
+    var start = performance.now();
+    function tick(now){
+      var p = Math.min(1, (now-start)/duration);
+      var eased = 1 - Math.pow(1-p, 3);
+      el.textContent = formatter(target*eased);
+      if(p<1) requestAnimationFrame(tick);
+      else el.textContent = formatter(target);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- render principal ----------
+  function computeAll(R){
+    var areas = R.areas.map(function(a){ return { area:a.area, model:a.model, activos:a.activos, people:a.people, t:a.totals.total }; });
+    var total = areas.reduce(function(s,a){ return s+a.t; }, 0);
+    var excedente = Math.max(0, total - R.incluidas);
+    var dentro = Math.min(total, R.incluidas);
+    var costoExc = excedente * R.tarifa;
+    var costoTotal = R.renta + costoExc;
+    var costoPorPag = total ? costoTotal/total : 0;
+    var excPorPag = total ? excedente/total : 0;
+    var activos = areas.reduce(function(s,a){ return s+a.activos; }, 0);
+    return { areas:areas, total:total, excedente:excedente, dentro:dentro, costoExc:costoExc, costoTotal:costoTotal, costoPorPag:costoPorPag, excPorPag:excPorPag, activos:activos };
+  }
+
+  function renderDashboard(R){
+    var C = computeAll(R);
+    var epsonList = R.epson || [];
+    var epsonTotalPages = 0, epsonTotalCost = 0, epsonAllCosted = true;
+    epsonList.forEach(function(p){
+      epsonTotalPages += p.pages;
+      if(p.costPeriod!==null) epsonTotalCost += p.costPeriod; else epsonAllCosted = false;
+    });
+    var granTotal = C.costoTotal + epsonTotalCost;
+
+    document.getElementById('hPeriodo').textContent = R.periodo;
+    document.getElementById('hGenerado').textContent = R.generado;
+    document.getElementById('pIntro').textContent = 'La renta cubre ' + fmt(R.incluidas) + ' páginas entre las cuatro impresoras Kyocera; cada página adicional se paga a ' + mxn(R.tarifa) + '. «Páginas» suma impresión y copiado.' +
+      (epsonList.length ? ' El gasto de las impresoras Epson a color se calcula aparte, con la lectura manual de su contador y el costo de tinta.' : '');
+
+    // KPIs
+    var kpiGrid = document.getElementById('kpiGrid');
+    kpiGrid.innerHTML = '';
+    var kpis = [
+      { label:'Costo total del mes', value:granTotal, isMoney:true, sub: epsonList.length ? 'Kyocera + tinta Epson' : 'Renta + excedente', accent:false },
+      { label:'Renta fija', value:R.renta, isMoney:true, sub:'Cubre '+fmt(R.incluidas)+' páginas', accent:false },
+      { label:'Costo de excedente', value:C.costoExc, isMoney:true, sub:fmt(C.excedente)+' páginas × '+mxn(R.tarifa), accent:true },
+      { label:'Páginas del mes', value:C.total, isMoney:false, sub:C.activos+' personas activas', accent:false },
+    ];
+    kpis.forEach(function(k){
+      var div = document.createElement('div');
+      div.className = 'kpi glass';
+      div.innerHTML = '<div class="kpi-value tabular'+(k.accent?' accent2':'')+'"></div><div class="kpi-label">'+k.label+'</div><div class="kpi-sub">'+k.sub+'</div>';
+      kpiGrid.appendChild(div);
+      var valEl = div.querySelector('.kpi-value');
+      animateNumber(valEl, k.value, k.isMoney ? mxn : fmt);
+    });
+
+    // barra de consumo
+    var maxViz = Math.max(C.total, R.incluidas);
+    var inclPct = maxViz ? (C.dentro/maxViz*100) : 0;
+    var excPct = maxViz ? (C.excedente/maxViz*100) : 0;
+    requestAnimationFrame(function(){
+      document.getElementById('segIncl').style.width = inclPct.toFixed(2)+'%';
+      document.getElementById('segExc').style.width = excPct.toFixed(2)+'%';
+    });
+    document.getElementById('usoResumen').textContent = fmt(C.total)+' páginas usadas de '+fmt(R.incluidas)+' contratadas ('+Math.round(C.total/R.incluidas*100)+'%)';
+    document.getElementById('legDentro').textContent = fmt(C.dentro);
+    document.getElementById('legExcedente').textContent = fmt(C.excedente)+' páginas = '+mxn(C.costoExc);
+
+    // áreas
+    var areaList = document.getElementById('areaList');
+    areaList.innerHTML = '';
+    var maxArea = C.areas.length ? Math.max.apply(null, C.areas.map(function(a){return a.t;})) : 1;
+    C.areas.forEach(function(a, idx){
+      var colorVar = AREAS[idx] ? AREAS[idx].color : 'var(--accent)';
+      var excA = a.t * C.excPorPag;
+      var w = maxArea ? (a.t/maxArea*100) : 0;
+      var excW = a.t ? (excA/a.t*w) : 0;
+      var inclW = w - excW;
+      var share = C.total ? Math.round(a.t/C.total*100) : 0;
+      var costoTotalArea = a.t * C.costoPorPag;
+
+      var card = document.createElement('div');
+      card.className = 'area-card glass';
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      card.innerHTML =
+        '<div class="area-top">' +
+          '<span class="area-swatch" style="background:'+colorVar+'"></span>' +
+          '<span class="area-name">'+a.area+'</span>' +
+          '<span class="area-meta">'+fmt(a.t)+' páginas · '+share+'% del consumo</span>' +
+          '<span class="area-costexc">'+mxn(excA*R.tarifa)+'</span>' +
+          '<span class="area-costexc-sub">de excedente ('+fmt(excA)+' pág.)</span>' +
+          '<span class="area-arrow no-print">Ver detalle →</span>' +
+        '</div>' +
+        '<div class="area-bar"><div style="width:0%;background:'+colorVar+';height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-incl"></div><div style="width:0%;background:var(--accent2);height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-exc"></div></div>' +
+        '<div class="area-bottom">' +
+          '<span>Costo total del área: <strong class="tabular">'+mxn(costoTotalArea)+'</strong> (renta proporcional + excedente)</span>' +
+          '<span class="sp">'+a.activos+' personas activas</span>' +
+        '</div>';
+      card.addEventListener('click', function(){ renderDetail(R, C, a, colorVar); });
+      card.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); renderDetail(R, C, a, colorVar); } });
+      areaList.appendChild(card);
+      requestAnimationFrame(function(){
+        card.querySelector('.bar-incl').style.width = Math.max(0,inclW).toFixed(2)+'%';
+        card.querySelector('.bar-exc').style.width = Math.max(0,excW).toFixed(2)+'%';
+      });
+    });
+
+    // impresión a color · Epson
+    var epsonSection = document.getElementById('epsonSection');
+    if(epsonList.length){
+      epsonSection.classList.remove('hidden');
+      var epsonOut = document.getElementById('epsonRowsOut');
+      epsonOut.innerHTML = '';
+      var maxEp = Math.max.apply(null, epsonList.map(function(p){ return p.pages; })) || 1;
+      epsonList.forEach(function(p){
+        var costoTxt = p.costPeriod!==null ? mxn(p.costPeriod) : 'sin costo';
+        var costPPTxt = p.costPerPage!==null ? (mxn(p.costPerPage)+'/pág.') : 'falta costo de kit y rendimiento';
+        var card = document.createElement('div');
+        card.className = 'area-card glass';
+        card.style.cursor = 'default';
+        card.innerHTML =
+          '<div class="area-top">' +
+            '<span class="area-swatch" style="background:var(--epson)"></span>' +
+            '<span class="area-name">'+escapeHtml(p.name)+'</span>' +
+            '<span class="area-meta">'+fmt(p.pages)+' páginas · leído el '+escapeHtml(p.fecha)+'</span>' +
+            '<span class="area-costexc" style="color:var(--epson)">'+costoTxt+'</span>' +
+            '<span class="area-costexc-sub">'+costPPTxt+'</span>' +
+          '</div>' +
+          '<div class="area-bar"><div style="width:0%;background:var(--epson);height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-incl"></div></div>';
+        epsonOut.appendChild(card);
+        requestAnimationFrame(function(){ card.querySelector('.bar-incl').style.width = (p.pages/maxEp*100).toFixed(2)+'%'; });
+      });
+      document.getElementById('epsonTotalOut').textContent =
+        'Total Epson: ' + fmt(epsonTotalPages) + ' páginas · ' + mxn(epsonTotalCost) +
+        (epsonAllCosted ? '' : ' (parcial — falta costo de kit o rendimiento en alguna impresora)');
+    } else {
+      epsonSection.classList.add('hidden');
+    }
+
+    // top usuarios
+    var topN = 10;
+    var allPeople = [];
+    C.areas.forEach(function(a){ a.people.forEach(function(p){ allPeople.push({ name:p.total ? p.name : p.name, total:p.total, areaName:a.area }); }); });
+    allPeople.sort(function(x,y){ return y.total-x.total; });
+    allPeople = allPeople.slice(0, topN);
+    document.getElementById('topNShown').textContent = allPeople.length;
+    var maxP = allPeople.length ? (allPeople[0].total||1) : 1;
+    var topBody = document.getElementById('topBody');
+    topBody.innerHTML = '';
+    allPeople.forEach(function(p, i){
+      var tr = document.createElement('tr');
+      tr.style.animationDelay = (i*0.035)+'s';
+      tr.innerHTML =
+        '<td class="rank tabular">'+String(i+1).padStart(2,'0')+'</td>' +
+        '<td class="name">'+escapeHtml(p.name)+'</td>' +
+        '<td><span class="tag">'+escapeHtml(p.areaName)+'</span></td>' +
+        '<td><div class="mini-bar-wrap"><div class="mini-bar" style="width:0%"></div></div></td>' +
+        '<td class="num tabular">'+fmt(p.total)+'</td>' +
+        '<td class="num dim tabular">'+mxn(p.total*C.costoPorPag)+'</td>';
+      topBody.appendChild(tr);
+      requestAnimationFrame(function(){ tr.querySelector('.mini-bar').style.width = (p.total/maxP*100).toFixed(2)+'%'; });
+    });
+
+    var footTxt = 'Fuente: contadores de cuenta de los equipos Kyocera · Renta mensual '+mxn(R.renta)+' por '+fmt(R.incluidas)+' páginas; excedente a '+mxn(R.tarifa)+' por página · El costo atribuido reparte renta y excedente en proporción al consumo.';
+    if(epsonList.length){
+      footTxt += ' · Impresión a color (Epson): lectura manual del contador interno de cada equipo (sin contador por cuenta); costo por página = costo del kit de tinta ÷ rendimiento estimado en páginas.';
+    }
+    footTxt += ' Montos en pesos mexicanos.';
+    document.getElementById('footNote').textContent = footTxt;
+  }
+
+  function renderDetail(R, C, area, colorVar){
+    document.getElementById('detailSwatch').style.background = colorVar;
+    document.getElementById('detailName').textContent = area.area;
+    document.getElementById('detailSub').textContent = area.activos+' personas activas · Equipo '+(area.model||'—');
+    var excA = area.t * C.excPorPag;
+    var costoTotalArea = area.t * C.costoPorPag;
+    document.getElementById('detailTotal').textContent = fmt(area.t);
+    document.getElementById('detailExc').textContent = fmt(excA)+' pág. = '+mxn(excA*R.tarifa);
+    document.getElementById('detailCosto').textContent = mxn(costoTotalArea);
+
+    var maxD = area.people.length ? (area.people[0].total||1) : 1;
+    var body = document.getElementById('detailBody');
+    body.innerHTML = '';
+    area.people.forEach(function(p, i){
+      var tr = document.createElement('tr');
+      tr.style.animationDelay = (i*0.03)+'s';
+      tr.innerHTML =
+        '<td class="rank tabular">'+String(i+1).padStart(2,'0')+'</td>' +
+        '<td class="name">'+escapeHtml(p.name)+'</td>' +
+        '<td><div class="mini-bar-wrap"><div class="mini-bar" style="width:0%"></div></div></td>' +
+        '<td class="num tabular">'+fmt(p.imprimir)+'</td>' +
+        '<td class="num tabular">'+fmt(p.copia)+'</td>' +
+        '<td class="num tabular">'+fmt(p.total)+'</td>' +
+        '<td class="num dim tabular">'+mxn(p.total*C.costoPorPag)+'</td>';
+      body.appendChild(tr);
+      requestAnimationFrame(function(){ tr.querySelector('.mini-bar').style.width = (p.total/maxD*100).toFixed(2)+'%'; });
+    });
+
+    document.getElementById('dash').classList.add('hidden');
+    document.getElementById('detail').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // Gancho usado por el archivo exportado: si trae un reporte incrustado, lo muestra directo
+  // sin pasar por la pantalla de carga (así quien lo recibe abre y ya ve el corte más reciente).
+  window.__loadEmbeddedReport = function(reportObj){
+    REPORT = reportObj;
+    renderDashboard(REPORT);
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('detail').classList.add('hidden');
+    document.getElementById('dash').classList.remove('hidden');
+  };
+
+  updateSetupStatus();
+})();
+</script>
+</body>
+</html>
