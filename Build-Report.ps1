@@ -20,7 +20,7 @@ param(
   [Parameter(Mandatory=$true)][string]$Periodo,
   [Parameter(Mandatory=$true)][string]$Generado,
   [double]$Renta = 8167.95,
-  [int]$Incluidas = 24000,
+  [int]$Incluidas = 6000,  # limite por impresora, no total (son 4 impresoras)
   [double]$Tarifa = 0.20,
   [string]$EpsonJson = $null,
   [string]$TemplatePath = "$PSScriptRoot\template.html",

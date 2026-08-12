@@ -310,7 +310,7 @@ License: MIT
       <div class="field glass"><label>Periodo</label><input id="inPeriodo" type="text" placeholder="Agosto 2026"></div>
       <div class="field glass"><label>Generado el</label><input id="inGenerado" type="text" placeholder="08/08/2026"></div>
       <div class="field glass"><label>Renta mensual (MXN)</label><input id="inRenta" type="number" step="0.01" value="8167.95"></div>
-      <div class="field glass"><label>Páginas incluidas</label><input id="inIncluidas" type="number" step="1" value="24000"></div>
+      <div class="field glass"><label>Páginas incluidas por impresora</label><input id="inIncluidas" type="number" step="1" value="6000"></div>
       <div class="field glass"><label>Tarifa excedente (MXN/pág)</label><input id="inTarifa" type="number" step="0.01" value="0.20"></div>
     </div>
 
@@ -582,7 +582,7 @@ License: MIT
     var periodo = document.getElementById('inPeriodo').value.trim() || 'Periodo actual';
     var generado = document.getElementById('inGenerado').value.trim() || todayMX();
     var renta = num(document.getElementById('inRenta').value) || 8167.95;
-    var incluidas = num(document.getElementById('inIncluidas').value) || 24000;
+    var incluidas = num(document.getElementById('inIncluidas').value) || 6000;
     var tarifa = num(document.getElementById('inTarifa').value);
     if(isNaN(tarifa)) tarifa = 0.20;
 
@@ -785,17 +785,28 @@ License: MIT
   }
 
   // ---------- render principal ----------
+  // Cada impresora Kyocera tiene su propio límite contratado (R.incluidas páginas);
+  // el excedente se calcula por impresora, no como una bolsa compartida entre las 4.
   function computeAll(R){
-    var areas = R.areas.map(function(a){ return { area:a.area, model:a.model, activos:a.activos, people:a.people, t:a.totals.total }; });
+    var limitePorArea = R.incluidas;
+    var rentaPorArea = R.renta / (R.areas.length || 1);
+    var areas = R.areas.map(function(a){
+      var t = a.totals.total;
+      var dentro = Math.min(t, limitePorArea);
+      var excedente = Math.max(0, t - limitePorArea);
+      var costoExc = excedente * R.tarifa;
+      var costoTotalArea = rentaPorArea + costoExc;
+      var costoPorPag = t ? costoTotalArea/t : 0;
+      return { area:a.area, model:a.model, activos:a.activos, people:a.people, t:t, dentro:dentro, excedente:excedente, costoExc:costoExc, costoTotalArea:costoTotalArea, costoPorPag:costoPorPag };
+    });
     var total = areas.reduce(function(s,a){ return s+a.t; }, 0);
-    var excedente = Math.max(0, total - R.incluidas);
-    var dentro = Math.min(total, R.incluidas);
-    var costoExc = excedente * R.tarifa;
+    var dentro = areas.reduce(function(s,a){ return s+a.dentro; }, 0);
+    var excedente = areas.reduce(function(s,a){ return s+a.excedente; }, 0);
+    var costoExc = areas.reduce(function(s,a){ return s+a.costoExc; }, 0);
+    var incluidasTotal = limitePorArea * areas.length;
     var costoTotal = R.renta + costoExc;
-    var costoPorPag = total ? costoTotal/total : 0;
-    var excPorPag = total ? excedente/total : 0;
     var activos = areas.reduce(function(s,a){ return s+a.activos; }, 0);
-    return { areas:areas, total:total, excedente:excedente, dentro:dentro, costoExc:costoExc, costoTotal:costoTotal, costoPorPag:costoPorPag, excPorPag:excPorPag, activos:activos };
+    return { areas:areas, total:total, excedente:excedente, dentro:dentro, costoExc:costoExc, costoTotal:costoTotal, incluidasTotal:incluidasTotal, limitePorArea:limitePorArea, activos:activos };
   }
 
   function renderDashboard(R){
@@ -810,7 +821,7 @@ License: MIT
 
     document.getElementById('hPeriodo').textContent = R.periodo;
     document.getElementById('hGenerado').textContent = R.generado;
-    document.getElementById('pIntro').textContent = 'La renta cubre ' + fmt(R.incluidas) + ' páginas entre las cuatro impresoras Kyocera; cada página adicional se paga a ' + mxn(R.tarifa) + '. «Páginas» suma impresión y copiado.' +
+    document.getElementById('pIntro').textContent = 'La renta cubre ' + fmt(R.incluidas) + ' páginas por cada una de las ' + C.areas.length + ' impresoras Kyocera (' + fmt(C.incluidasTotal) + ' en total); cada página adicional en esa impresora se paga a ' + mxn(R.tarifa) + '. «Páginas» suma impresión y copiado.' +
       (epsonList.length ? ' El gasto de las impresoras Epson a color se calcula aparte, con la lectura manual de su contador y el costo de tinta.' : '');
 
     // KPIs
@@ -818,8 +829,8 @@ License: MIT
     kpiGrid.innerHTML = '';
     var kpis = [
       { label:'Costo total del mes', value:granTotal, isMoney:true, sub: epsonList.length ? 'Kyocera + tinta Epson' : 'Renta + excedente', accent:false },
-      { label:'Renta fija', value:R.renta, isMoney:true, sub:'Cubre '+fmt(R.incluidas)+' páginas', accent:false },
-      { label:'Costo de excedente', value:C.costoExc, isMoney:true, sub:fmt(C.excedente)+' páginas × '+mxn(R.tarifa), accent:true },
+      { label:'Renta fija', value:R.renta, isMoney:true, sub:'Cubre '+fmt(R.incluidas)+' pág./impresora ('+fmt(C.incluidasTotal)+' en total)', accent:false },
+      { label:'Costo de excedente', value:C.costoExc, isMoney:true, sub:fmt(C.excedente)+' pág. arriba del límite de su impresora × '+mxn(R.tarifa), accent:true },
       { label:'Páginas del mes', value:C.total, isMoney:false, sub:C.activos+' personas activas', accent:false },
     ];
     kpis.forEach(function(k){
@@ -832,14 +843,14 @@ License: MIT
     });
 
     // barra de consumo
-    var maxViz = Math.max(C.total, R.incluidas);
+    var maxViz = Math.max(C.total, C.incluidasTotal);
     var inclPct = maxViz ? (C.dentro/maxViz*100) : 0;
     var excPct = maxViz ? (C.excedente/maxViz*100) : 0;
     requestAnimationFrame(function(){
       document.getElementById('segIncl').style.width = inclPct.toFixed(2)+'%';
       document.getElementById('segExc').style.width = excPct.toFixed(2)+'%';
     });
-    document.getElementById('usoResumen').textContent = fmt(C.total)+' páginas usadas de '+fmt(R.incluidas)+' contratadas ('+Math.round(C.total/R.incluidas*100)+'%)';
+    document.getElementById('usoResumen').textContent = fmt(C.total)+' páginas usadas de '+fmt(C.incluidasTotal)+' contratadas ('+Math.round(C.total/C.incluidasTotal*100)+'%)';
     document.getElementById('legDentro').textContent = fmt(C.dentro);
     document.getElementById('legExcedente').textContent = fmt(C.excedente)+' páginas = '+mxn(C.costoExc);
 
@@ -849,12 +860,13 @@ License: MIT
     var maxArea = C.areas.length ? Math.max.apply(null, C.areas.map(function(a){return a.t;})) : 1;
     C.areas.forEach(function(a, idx){
       var colorVar = AREAS[idx] ? AREAS[idx].color : 'var(--accent)';
-      var excA = a.t * C.excPorPag;
+      var excA = a.excedente;
       var w = maxArea ? (a.t/maxArea*100) : 0;
       var excW = a.t ? (excA/a.t*w) : 0;
       var inclW = w - excW;
       var share = C.total ? Math.round(a.t/C.total*100) : 0;
-      var costoTotalArea = a.t * C.costoPorPag;
+      var costoTotalArea = a.costoTotalArea;
+      var sinExcedente = excA <= 0;
 
       var card = document.createElement('div');
       card.className = 'area-card glass';
@@ -864,14 +876,14 @@ License: MIT
         '<div class="area-top">' +
           '<span class="area-swatch" style="background:'+colorVar+'"></span>' +
           '<span class="area-name">'+a.area+'</span>' +
-          '<span class="area-meta">'+fmt(a.t)+' páginas · '+share+'% del consumo</span>' +
-          '<span class="area-costexc">'+mxn(excA*R.tarifa)+'</span>' +
-          '<span class="area-costexc-sub">de excedente ('+fmt(excA)+' pág.)</span>' +
+          '<span class="area-meta">'+fmt(a.t)+' páginas · '+share+'% del consumo · límite '+fmt(C.limitePorArea)+'</span>' +
+          '<span class="area-costexc"'+(sinExcedente?' style="color:var(--good)"':'')+'>'+(sinExcedente?'Sin excedente':mxn(a.costoExc))+'</span>' +
+          '<span class="area-costexc-sub">'+(sinExcedente?'dentro de su límite':'de excedente ('+fmt(excA)+' pág. arriba de '+fmt(C.limitePorArea)+')')+'</span>' +
           '<span class="area-arrow no-print">Ver detalle →</span>' +
         '</div>' +
         '<div class="area-bar"><div style="width:0%;background:'+colorVar+';height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-incl"></div><div style="width:0%;background:var(--accent2);height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-exc"></div></div>' +
         '<div class="area-bottom">' +
-          '<span>Costo total del área: <strong class="tabular">'+mxn(costoTotalArea)+'</strong> (renta proporcional + excedente)</span>' +
+          '<span>Costo total del área: <strong class="tabular">'+mxn(costoTotalArea)+'</strong> (renta de su impresora + su propio excedente)</span>' +
           '<span class="sp">'+a.activos+' personas activas</span>' +
         '</div>';
       card.addEventListener('click', function(){ renderDetail(R, C, a, colorVar); });
@@ -918,7 +930,7 @@ License: MIT
     // top usuarios
     var topN = 10;
     var allPeople = [];
-    C.areas.forEach(function(a){ a.people.forEach(function(p){ allPeople.push({ name:p.total ? p.name : p.name, total:p.total, areaName:a.area }); }); });
+    C.areas.forEach(function(a){ a.people.forEach(function(p){ allPeople.push({ name:p.name, total:p.total, areaName:a.area, costoPorPag:a.costoPorPag }); }); });
     allPeople.sort(function(x,y){ return y.total-x.total; });
     allPeople = allPeople.slice(0, topN);
     document.getElementById('topNShown').textContent = allPeople.length;
@@ -934,12 +946,12 @@ License: MIT
         '<td><span class="tag">'+escapeHtml(p.areaName)+'</span></td>' +
         '<td><div class="mini-bar-wrap"><div class="mini-bar" style="width:0%"></div></div></td>' +
         '<td class="num tabular">'+fmt(p.total)+'</td>' +
-        '<td class="num dim tabular">'+mxn(p.total*C.costoPorPag)+'</td>';
+        '<td class="num dim tabular">'+mxn(p.total*p.costoPorPag)+'</td>';
       topBody.appendChild(tr);
       requestAnimationFrame(function(){ tr.querySelector('.mini-bar').style.width = (p.total/maxP*100).toFixed(2)+'%'; });
     });
 
-    var footTxt = 'Fuente: contadores de cuenta de los equipos Kyocera · Renta mensual '+mxn(R.renta)+' por '+fmt(R.incluidas)+' páginas; excedente a '+mxn(R.tarifa)+' por página · El costo atribuido reparte renta y excedente en proporción al consumo.';
+    var footTxt = 'Fuente: contadores de cuenta de los equipos Kyocera · Renta mensual '+mxn(R.renta)+' por 4 impresoras, '+fmt(R.incluidas)+' páginas incluidas en cada una; excedente a '+mxn(R.tarifa)+' por página arriba del límite de esa impresora · El costo atribuido a cada persona reparte la renta y el excedente de su propia impresora en proporción a su consumo dentro de esa área.';
     if(epsonList.length){
       footTxt += ' · Impresión a color (Epson): lectura manual del contador interno de cada equipo (sin contador por cuenta); costo por página = costo del kit de tinta ÷ rendimiento estimado en páginas.';
     }
@@ -950,11 +962,11 @@ License: MIT
   function renderDetail(R, C, area, colorVar){
     document.getElementById('detailSwatch').style.background = colorVar;
     document.getElementById('detailName').textContent = area.area;
-    document.getElementById('detailSub').textContent = area.activos+' personas activas · Equipo '+(area.model||'—');
-    var excA = area.t * C.excPorPag;
-    var costoTotalArea = area.t * C.costoPorPag;
+    document.getElementById('detailSub').textContent = area.activos+' personas activas · Equipo '+(area.model||'—')+' · límite '+fmt(C.limitePorArea)+' pág.';
+    var excA = area.excedente;
+    var costoTotalArea = area.costoTotalArea;
     document.getElementById('detailTotal').textContent = fmt(area.t);
-    document.getElementById('detailExc').textContent = fmt(excA)+' pág. = '+mxn(excA*R.tarifa);
+    document.getElementById('detailExc').textContent = excA>0 ? (fmt(excA)+' pág. = '+mxn(area.costoExc)) : 'Sin excedente';
     document.getElementById('detailCosto').textContent = mxn(costoTotalArea);
 
     var maxD = area.people.length ? (area.people[0].total||1) : 1;
@@ -970,7 +982,7 @@ License: MIT
         '<td class="num tabular">'+fmt(p.imprimir)+'</td>' +
         '<td class="num tabular">'+fmt(p.copia)+'</td>' +
         '<td class="num tabular">'+fmt(p.total)+'</td>' +
-        '<td class="num dim tabular">'+mxn(p.total*C.costoPorPag)+'</td>';
+        '<td class="num dim tabular">'+mxn(p.total*area.costoPorPag)+'</td>';
       body.appendChild(tr);
       requestAnimationFrame(function(){ tr.querySelector('.mini-bar').style.width = (p.total/maxD*100).toFixed(2)+'%'; });
     });
