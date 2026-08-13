@@ -1,0 +1,78 @@
+name: Generar reporte
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'incoming/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generar-reporte
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar reporte desde los CSV de incoming/
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Find-Csv([string]$prefix) {
+            $f = Get-ChildItem -Path incoming -Filter *.csv -File |
+                 Where-Object { $_.Name -match ('(?i)^' + $prefix) } |
+                 Select-Object -First 1
+            if (-not $f) { throw "No se encontro un CSV que empiece con '$prefix' en la carpeta incoming/. Sube los 4 archivos: ALMACEN.csv, ADMINISTRACION.csv, POSTVENTA.csv, OPERACIONES.csv" }
+            return $f.FullName
+          }
+
+          $almacen     = Find-Csv 'ALMACEN'
+          $admin       = Find-Csv 'ADMINISTRACION'
+          $postventa   = Find-Csv 'POSTVENTA'
+          $operaciones = Find-Csv 'OPERACIONES'
+
+          # Fecha y periodo en horario de Ciudad de Mexico
+          $tz  = [TimeZoneInfo]::FindSystemTimeZoneById('America/Mexico_City')
+          $now = [TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $tz)
+          $generado = $now.ToString('dd/MM/yyyy')
+
+          $periodoFile = 'incoming/periodo.txt'
+          if (Test-Path $periodoFile) {
+            $periodo = (Get-Content $periodoFile -Raw -Encoding UTF8).Trim()
+          }
+          if (-not $periodo) {
+            $cult = [cultureinfo]::GetCultureInfo('es-MX')
+            $mes  = $cult.DateTimeFormat.GetMonthName($now.Month)
+            $periodo = $mes.Substring(0,1).ToUpper() + $mes.Substring(1) + ' ' + $now.Year
+          }
+
+          $params = @{
+            AlmacenCsv     = $almacen
+            AdminCsv       = $admin
+            PostventaCsv   = $postventa
+            OperacionesCsv = $operaciones
+            Periodo        = $periodo
+            Generado       = $generado
+          }
+          if (Test-Path 'incoming/epson.json') { $params.EpsonJson = 'incoming/epson.json' }
+
+          ./Build-Report.ps1 @params
+
+      - name: Publicar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html reports/
+          if git diff --cached --quiet; then
+            echo "Sin cambios que publicar."
+          else
+            git commit -m "Reporte actualizado automaticamente desde incoming/"
+            git push
+          fi
