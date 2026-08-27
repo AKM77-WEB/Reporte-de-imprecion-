@@ -23,6 +23,23 @@ computadora o celular con tu cuenta de GitHub.
 4. Espera 1 o 2 minutos. Un robot (pestaña **Actions**) procesa los CSV, regenera el reporte,
    lo agrega al historial y lo publica. El link es siempre el mismo.
 
+## Ya NO hace falta reiniciar los contadores de las impresoras
+
+El robot guarda una copia de los CSV de cada corte en la carpeta `baseline/` (no la toques).
+Cuando subes los CSV del corte nuevo, el consumo del periodo se calcula solo:
+
+> **consumo del mes = contador actual − contador del corte anterior**, persona por persona.
+
+Es decir: exporta los CSV el día del corte y súbelos, aunque los contadores vengan acumulados
+desde hace meses. Detalles:
+
+- Si una impresora **sí** se reinició a la mitad del periodo, el robot lo detecta
+  (el contador actual sale menor que el del corte anterior) y usa el contador tal cual.
+- Volver a correr el robot con los **mismos** CSV (por ejemplo para corregir el texto del
+  periodo) no descompone nada: usa la línea base del corte anterior y salen los mismos números.
+- La línea base actual es la foto de los contadores del **12 de agosto de 2026** (el corte
+  pasado), así que el siguiente reporte cubrirá del 12 de agosto a la fecha en que exportes.
+
 ## El periodo (nombre del mes en el reporte)
 
 - Si no haces nada, el robot usa el mes y año actuales, por ejemplo: **"Agosto 2026"**.

@@ -23,6 +23,10 @@ param(
   [int]$Incluidas = 6000,  # limite por impresora, no total (son 4 impresoras)
   [double]$Tarifa = 0.20,
   [string]$EpsonJson = $null,
+  # Carpeta con los CSV del corte anterior (linea base). Si existe el CSV del area,
+  # el consumo del periodo = contador actual - contador de la linea base, cuenta por cuenta.
+  # Asi no hace falta reiniciar los contadores fisicos en cada corte.
+  [string]$BaselineDir = $null,
   [string]$TemplatePath = "$PSScriptRoot\template.html",
   [string]$OutputPath = "$PSScriptRoot\index.html",
   [string]$ReportsDir = "$PSScriptRoot\reports"
@@ -44,10 +48,34 @@ function Get-Num($v) {
   return 0
 }
 
+function Get-AccountKey($row) {
+  $id = ('' + $row.c4).Trim()
+  $name = ('' + $row.c5).Trim()
+  return $id + '|' + $name.ToLowerInvariant()
+}
+
+# Lee un CSV de linea base y regresa un mapa cuenta -> contadores acumulados
+function Get-BaselineMap {
+  param([string]$CsvPath)
+  $map = @{}
+  if (-not $CsvPath) { return $map }
+  $rows = Import-Csv -Path $CsvPath -Header $Headers -Encoding UTF8 | Select-Object -Skip 1
+  foreach ($row in $rows) {
+    $name = $row.c5
+    if (-not $name -or $name.Trim() -eq '') { continue }
+    $map[(Get-AccountKey $row)] = @{
+      imprimir = Get-Num $row.c6; copia = Get-Num $row.c7; escanear = Get-Num $row.c8
+      simple   = Get-Num $row.c33; duplex = Get-Num $row.c34
+    }
+  }
+  return $map
+}
+
 function Get-AreaData {
-  param([string]$CsvPath, [string]$AreaName)
+  param([string]$CsvPath, [string]$AreaName, [string]$BaselineCsvPath)
 
   $rows = Import-Csv -Path $CsvPath -Header $Headers -Encoding UTF8 | Select-Object -Skip 1
+  $base = Get-BaselineMap -CsvPath $BaselineCsvPath
 
   $model = ''
   $people = New-Object System.Collections.Generic.List[object]
@@ -66,6 +94,22 @@ function Get-AreaData {
     $escanear = Get-Num $row.c8
     $simple   = Get-Num $row.c33
     $duplex   = Get-Num $row.c34
+
+    # Con linea base: el consumo del periodo es la diferencia contra el corte anterior.
+    # Si algun contador actual es menor que el de la linea base, el equipo se reinicio
+    # despues de ese corte y el contador actual ya es el consumo del periodo.
+    $key = Get-AccountKey $row
+    if ($base.ContainsKey($key)) {
+      $b = $base[$key]
+      $dImp = $imprimir - $b.imprimir
+      $dCop = $copia    - $b.copia
+      $dEsc = $escanear - $b.escanear
+      if ($dImp -ge 0 -and $dCop -ge 0 -and $dEsc -ge 0) {
+        $imprimir = $dImp; $copia = $dCop; $escanear = $dEsc
+        $simple = [Math]::Max(0, $simple - $b.simple)
+        $duplex = [Math]::Max(0, $duplex - $b.duplex)
+      }
+    }
 
     if (($imprimir + $copia + $escanear) -eq 0) { continue }
 
@@ -90,13 +134,26 @@ function Get-AreaData {
   return [ordered]@{ area=$AreaName; model=$model; people=$sorted; totals=$totals; activos=$sorted.Count }
 }
 
+# Busca el CSV de linea base del area dentro de $BaselineDir (mismo criterio de prefijo)
+function Find-BaselineCsv([string]$prefix) {
+  if (-not $BaselineDir -or -not (Test-Path $BaselineDir)) { return $null }
+  $f = Get-ChildItem -Path $BaselineDir -Filter *.csv -File |
+       Where-Object { $_.Name -match ('(?i)^' + $prefix) } |
+       Select-Object -First 1
+  if ($f) { return $f.FullName }
+  return $null
+}
+
 # Mismo orden que AREAS en el HTML: Almacén, Administración, Postventa, Operaciones
 $areas = @(
-  (Get-AreaData -CsvPath $AlmacenCsv -AreaName 'Almacén'),
-  (Get-AreaData -CsvPath $AdminCsv -AreaName 'Administración'),
-  (Get-AreaData -CsvPath $PostventaCsv -AreaName 'Postventa'),
-  (Get-AreaData -CsvPath $OperacionesCsv -AreaName 'Operaciones')
+  (Get-AreaData -CsvPath $AlmacenCsv -AreaName 'Almacén' -BaselineCsvPath (Find-BaselineCsv 'ALMACEN')),
+  (Get-AreaData -CsvPath $AdminCsv -AreaName 'Administración' -BaselineCsvPath (Find-BaselineCsv 'ADMINISTRACION')),
+  (Get-AreaData -CsvPath $PostventaCsv -AreaName 'Postventa' -BaselineCsvPath (Find-BaselineCsv 'POSTVENTA')),
+  (Get-AreaData -CsvPath $OperacionesCsv -AreaName 'Operaciones' -BaselineCsvPath (Find-BaselineCsv 'OPERACIONES'))
 )
+if ($BaselineDir -and (Test-Path $BaselineDir)) {
+  Write-Host "Linea base aplicada desde: $BaselineDir (consumo = contador actual - corte anterior)"
+}
 
 $epson = @()
 if ($EpsonJson -and (Test-Path $EpsonJson)) {

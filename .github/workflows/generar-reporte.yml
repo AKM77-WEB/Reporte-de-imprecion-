@@ -63,13 +63,46 @@ jobs:
           }
           if (Test-Path 'incoming/epson.json') { $params.EpsonJson = 'incoming/epson.json' }
 
+          # ---- Linea base: los contadores ya no necesitan reiniciarse en cada corte ----
+          # baseline/current = CSVs del corte anterior; baseline/prev = del corte antepasado.
+          # Corte nuevo (CSVs distintos a baseline/current): se resta baseline/current.
+          # Re-corrida con los mismos CSVs (p.ej. para cambiar el periodo): se resta
+          # baseline/prev, para que el reporte salga con los mismos numeros.
+          $curDir  = 'baseline/current'
+          $prevDir = 'baseline/prev'
+          $canon = [ordered]@{ ALMACEN=$almacen; ADMINISTRACION=$admin; POSTVENTA=$postventa; OPERACIONES=$operaciones }
+
+          $esCorteNuevo = $true
+          if (Test-Path $curDir) {
+            $esCorteNuevo = $false
+            foreach ($p in $canon.Keys) {
+              $cur = Get-ChildItem $curDir -Filter *.csv -File |
+                     Where-Object { $_.Name -match ('(?i)^' + $p) } | Select-Object -First 1
+              if (-not $cur -or ((Get-FileHash $canon[$p]).Hash -ne (Get-FileHash $cur.FullName).Hash)) {
+                $esCorteNuevo = $true; break
+              }
+            }
+          }
+
+          $baseDir = if ($esCorteNuevo) { $curDir } else { $prevDir }
+          if (Test-Path $baseDir) { $params.BaselineDir = $baseDir }
+          Write-Host "Corte nuevo: $esCorteNuevo | Linea base: $(if (Test-Path $baseDir) { $baseDir } else { 'ninguna (contadores tal cual)' })"
+
           ./Build-Report.ps1 @params
+
+          # Rotar la linea base solo cuando hubo corte nuevo
+          if ($esCorteNuevo) {
+            if (Test-Path $prevDir) { Remove-Item $prevDir -Recurse -Force }
+            if (Test-Path $curDir)  { Move-Item $curDir $prevDir }
+            New-Item -ItemType Directory -Path $curDir -Force | Out-Null
+            foreach ($p in $canon.Keys) { Copy-Item $canon[$p] (Join-Path $curDir "$p.csv") }
+          }
 
       - name: Publicar cambios
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html reports/
+          git add index.html reports/ baseline/
           if git diff --cached --quiet; then
             echo "Sin cambios que publicar."
           else
