@@ -74,6 +74,26 @@ if (Test-Path $CsvDir) {
   if (-not $conCsvs) { Write-Host "(carpeta corte\ sin CSVs: se suben solo las lecturas Epson)" }
 }
 
+# ---------- etiqueta del periodo (solo en corte con CSVs) ----------
+# Del corte anterior (fecha grabada dentro de los CSV de la linea base) a hoy.
+if ($conCsvs) {
+  $meses = 'ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'
+  $baseCsv = Join-Path $RepoDir 'baseline\current\ALMACEN.csv'
+  if (Test-Path $baseCsv) {
+    $ult = Get-Content $baseCsv -Encoding UTF8 | Select-Object -Skip 1 -First 1
+    $ts = (($ult -split '","')[-1] -replace '"', '').Trim()
+    if ($ts -match '(\d{2})/(\d{2})/(\d{4})') {
+      $dIni = [int]$Matches[1]; $mIni = [int]$Matches[2]; $aIni = [int]$Matches[3]
+      $hoyD = Get-Date
+      $per = "Corte $dIni $($meses[$mIni - 1])"
+      if ($aIni -ne $hoyD.Year) { $per += " $aIni" }
+      $per += " - $($hoyD.Day) $($meses[$hoyD.Month - 1]) $($hoyD.Year)"
+      [System.IO.File]::WriteAllText((Join-Path $RepoDir 'incoming\periodo.txt'), $per, (New-Object System.Text.UTF8Encoding($false)))
+      Write-Host "Periodo del reporte: $per"
+    }
+  }
+}
+
 # ---------- subir ----------
 git add incoming/
 $pendiente = git status --porcelain incoming

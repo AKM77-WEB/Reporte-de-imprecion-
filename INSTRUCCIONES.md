@@ -86,6 +86,16 @@ del corte o justo después de subirlos** (nunca días antes: la lectura queda am
 corte con el que se sube). Si no existe `incoming/epson.json`, el reporte sale solo con
 las Kyocera (normal).
 
+## Recordatorio automático cada día 15
+
+En la computadora de la oficina hay una tarea programada de Windows
+(**"Corte reporte impresion"**, día 15 a las 9:00) que ejecuta `Corte-Programado.ps1`:
+avisa con una ventana que es día de corte, abre la carpeta `corte\` y queda esperando.
+Solo exportas los 4 CSV desde Kyocera Net Viewer a esa carpeta y el resto es solo:
+lee las Epson por IP, arma la etiqueta del periodo (del corte anterior a hoy) y sube
+todo en un commit. Si ese día la compu estuvo apagada, corre el corte a mano con
+`Corte-Epson.bat` cuando puedas.
+
 ## Corte automático desde la computadora (recomendado)
 
 En la copia del repositorio en la computadora de la oficina está **`Corte-Epson.bat`**:
