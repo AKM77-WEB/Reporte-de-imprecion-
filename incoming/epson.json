@@ -1,10 +1,8 @@
-[
-  {
-    "name": "Administración",
-    "ip": "120.200.124.1",
-    "lectura": 53787,
-    "fecha": "27/08/2026",
-    "costoKit": 900.00,
-    "rendimientoKit": 6000
-  }
-]
+[{
+    "name":  "Administración",
+    "ip":  "120.200.124.1",
+    "costoKit":  900.00,
+    "rendimientoKit":  6000,
+    "lectura":  53791,
+    "fecha":  "27/08/2026"
+}]
