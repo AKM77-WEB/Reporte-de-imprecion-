@@ -6,13 +6,19 @@ computadora o celular con tu cuenta de GitHub.
 
 ## Pasos
 
-1. Exporta los 4 CSV desde Kyocera Net Viewer (uno por área), con estos nombres:
+1. Exporta desde Kyocera Net Viewer **un solo CSV de contadores con todas las
+   impresoras** (cualquier nombre que NO empiece con el nombre de un área sirve,
+   p.ej. `TODAS.csv`). El robot lo separa solo por la IP de cada equipo.
+
+   *También se aceptan los 4 CSV por área, con estos nombres:*
    - `ALMACEN.csv`
    - `ADMINISTRACION.csv`
    - `POSTVENTA.csv`
    - `OPERACIONES.csv`
 
-   (Mayúsculas o minúsculas dan igual, pero el nombre debe **empezar** con la palabra del área.)
+   (Mayúsculas o minúsculas dan igual, pero el nombre debe **empezar** con la palabra
+   del área. Si en `incoming/` conviven un combinado y CSV por área, el robot usa el
+   que se haya subido más recientemente.)
 
 2. Entra a la carpeta [`incoming/`](https://github.com/AKM77-WEB/Reporte-de-imprecion-/tree/main/incoming)
    de este repositorio.
@@ -113,6 +119,8 @@ La impresora debe estar encendida y en red. Registrada hasta ahora:
 | Impresora | IP | Tinta | Rendimiento usado |
 |---|---|---|---|
 | Administración (L6270) | 120.200.124.1 | Kit T504 ($900) | 6,000 pág. por kit (≈ $0.15/pág.) |
+| Operaciones (L6270) | 120.200.120.223 | Kit T504 ($900) | 6,000 pág. por kit (≈ $0.15/pág.) |
+| Postventa (L6270) | 120.200.124.218 | Kit T504 ($900) | 6,000 pág. por kit (≈ $0.15/pág.) |
 
 *(El rendimiento oficial del kit T504 es 7,500 pág. el negro y 6,000 pág. los colores;
 como esta impresora imprime ~85% a color, se usa 6,000.)*

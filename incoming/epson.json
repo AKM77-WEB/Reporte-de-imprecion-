@@ -1,8 +1,26 @@
-[{
-    "name":  "Administración",
-    "ip":  "120.200.124.1",
-    "costoKit":  900.00,
-    "rendimientoKit":  6000,
-    "lectura":  53791,
-    "fecha":  "27/08/2026"
-}]
+[
+  {
+    "name": "Administración",
+    "ip": "120.200.124.1",
+    "lectura": 53791,
+    "fecha": "27/08/2026",
+    "costoKit": 900.00,
+    "rendimientoKit": 6000
+  },
+  {
+    "name": "Operaciones",
+    "ip": "120.200.120.223",
+    "lectura": 17874,
+    "fecha": "27/08/2026",
+    "costoKit": 900.00,
+    "rendimientoKit": 6000
+  },
+  {
+    "name": "Postventa",
+    "ip": "120.200.124.218",
+    "lectura": 19514,
+    "fecha": "27/08/2026",
+    "costoKit": 900.00,
+    "rendimientoKit": 6000
+  }
+]

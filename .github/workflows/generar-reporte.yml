@@ -33,10 +33,69 @@ jobs:
             return $f.FullName
           }
 
-          $almacen     = Find-Csv 'ALMACEN'
-          $admin       = Find-Csv 'ADMINISTRACION'
-          $postventa   = Find-Csv 'POSTVENTA'
-          $operaciones = Find-Csv 'OPERACIONES'
+          # ---- CSV combinado: un solo export con todas las impresoras ----
+          # Cada fila trae la IP y el host del equipo, asi que se puede separar
+          # por area aqui mismo. Si conviven el combinado y los CSV por area,
+          # gana el que se haya subido (commiteado) mas recientemente.
+          $areaNames = 'ALMACEN','ADMINISTRACION','POSTVENTA','OPERACIONES'
+          function Test-EsArea([string]$n) {
+            foreach ($a in $areaNames) { if ($n -match ('(?i)^' + $a)) { return $true } }
+            return $false
+          }
+          function Get-CommitTime([string]$path) {
+            $raw = git log -1 --format=%ct -- $path
+            if ($raw) { return [long]$raw } else { return 0 }
+          }
+
+          $combinado = Get-ChildItem incoming -Filter *.csv -File |
+                       Where-Object { -not (Test-EsArea $_.Name) } | Select-Object -First 1
+          $usarCombinado = $false
+          if ($combinado) {
+            $tComb = Get-CommitTime "incoming/$($combinado.Name)"
+            $tAreas = 0
+            foreach ($f in (Get-ChildItem incoming -Filter *.csv -File | Where-Object { Test-EsArea $_.Name })) {
+              $t = Get-CommitTime "incoming/$($f.Name)"
+              if ($t -gt $tAreas) { $tAreas = $t }
+            }
+            if ($tComb -ge $tAreas) { $usarCombinado = $true }
+            else { Write-Host "CSV combinado presente pero mas viejo que los CSV por area: se usan los CSV por area." }
+          }
+
+          if ($usarCombinado) {
+            Write-Host "CSV combinado: $($combinado.Name); separando por impresora..."
+            $mapaIP   = @{ '120.200.120.29' = 'ALMACEN'; '120.200.127.77' = 'ADMINISTRACION';
+                           '120.200.120.31' = 'POSTVENTA'; '120.200.124.6' = 'OPERACIONES' }
+            $mapaHost = @{ 'KM1AEFDE' = 'ALMACEN'; 'KM0F008F' = 'ADMINISTRACION';
+                           'KM1AEFDD' = 'POSTVENTA'; 'KM1AEFDA' = 'OPERACIONES' }
+            $lineas = Get-Content $combinado.FullName -Encoding UTF8
+            $porArea = @{}
+            foreach ($a in $areaNames) { $porArea[$a] = New-Object System.Collections.Generic.List[string] }
+            foreach ($l in ($lineas | Select-Object -Skip 1)) {
+              $area = $null
+              if ($l -match '"(\d{1,3}(?:\.\d{1,3}){3})"' -and $mapaIP.ContainsKey($Matches[1])) { $area = $mapaIP[$Matches[1]] }
+              elseif ($l -match '"(KM[0-9A-Fa-f]{6})"' -and $mapaHost.ContainsKey($Matches[1].ToUpper())) { $area = $mapaHost[$Matches[1].ToUpper()] }
+              if ($area) { $porArea[$area].Add($l) }
+            }
+            $splitDir = Join-Path (Get-Location).Path '_split'
+            New-Item -ItemType Directory -Path $splitDir -Force | Out-Null
+            $Utf8Sep = New-Object System.Text.UTF8Encoding($false)
+            foreach ($a in $areaNames) {
+              if ($porArea[$a].Count -eq 0) {
+                throw "El CSV combinado no trae ninguna fila de $a. ¿Cambio la IP de esa impresora? (se esperan: 120.200.120.29 ALMACEN, 120.200.127.77 ADMINISTRACION, 120.200.120.31 POSTVENTA, 120.200.124.6 OPERACIONES)"
+              }
+              [System.IO.File]::WriteAllLines((Join-Path $splitDir "$a.csv"), ([string[]](@($lineas[0]) + $porArea[$a])), $Utf8Sep)
+              Write-Host "  $a.csv: $($porArea[$a].Count) filas"
+            }
+            $almacen     = Join-Path $splitDir 'ALMACEN.csv'
+            $admin       = Join-Path $splitDir 'ADMINISTRACION.csv'
+            $postventa   = Join-Path $splitDir 'POSTVENTA.csv'
+            $operaciones = Join-Path $splitDir 'OPERACIONES.csv'
+          } else {
+            $almacen     = Find-Csv 'ALMACEN'
+            $admin       = Find-Csv 'ADMINISTRACION'
+            $postventa   = Find-Csv 'POSTVENTA'
+            $operaciones = Find-Csv 'OPERACIONES'
+          }
 
           # Fecha y periodo en horario de Ciudad de Mexico
           $tz  = [TimeZoneInfo]::FindSystemTimeZoneById('America/Mexico_City')
