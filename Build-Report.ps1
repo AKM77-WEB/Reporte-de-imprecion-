@@ -27,9 +27,11 @@ param(
   # el consumo del periodo = contador actual - contador de la linea base, cuenta por cuenta.
   # Asi no hace falta reiniciar los contadores fisicos en cada corte.
   [string]$BaselineDir = $null,
-  [string]$TemplatePath = "$PSScriptRoot\template.html",
-  [string]$OutputPath = "$PSScriptRoot\index.html",
-  [string]$ReportsDir = "$PSScriptRoot\reports"
+  # Join-Path normaliza el separador: en el runner de Linux "\" no separa carpetas
+  # y el archivo terminaria escrito fuera del repositorio.
+  [string]$TemplatePath = (Join-Path $PSScriptRoot 'template.html'),
+  [string]$OutputPath = (Join-Path $PSScriptRoot 'index.html'),
+  [string]$ReportsDir = (Join-Path $PSScriptRoot 'reports')
 )
 
 $ErrorActionPreference = 'Stop'
