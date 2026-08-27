@@ -1,0 +1,3 @@
+# Los CSV se guardan byte a byte, sin convertir fines de linea:
+# la deteccion de corte nuevo del robot compara su contenido.
+*.csv -text

@@ -72,16 +72,31 @@ jobs:
           $prevDir = 'baseline/prev'
           $canon = [ordered]@{ ALMACEN=$almacen; ADMINISTRACION=$admin; POSTVENTA=$postventa; OPERACIONES=$operaciones }
 
+          # Hash del contenido normalizando fines de linea (CRLF vs LF no debe
+          # contar como archivo distinto: Windows y Linux los guardan diferente)
+          function Get-ContentHash([string]$path) {
+            $t = [System.IO.File]::ReadAllText($path) -replace "`r`n", "`n"
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            return [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($t)))
+          }
+
           $esCorteNuevo = $true
           if (Test-Path $curDir) {
             $esCorteNuevo = $false
             foreach ($p in $canon.Keys) {
               $cur = Get-ChildItem $curDir -Filter *.csv -File |
                      Where-Object { $_.Name -match ('(?i)^' + $p) } | Select-Object -First 1
-              if (-not $cur -or ((Get-FileHash $canon[$p]).Hash -ne (Get-FileHash $cur.FullName).Hash)) {
+              if (-not $cur -or ((Get-ContentHash $canon[$p]) -ne (Get-ContentHash $cur.FullName))) {
                 $esCorteNuevo = $true; break
               }
             }
+          }
+
+          # Sin CSVs nuevos y sin linea base previa no hay nada que regenerar
+          # (p.ej. solo se edito periodo.txt): se conserva el reporte publicado.
+          if (-not $esCorteNuevo -and -not (Test-Path $prevDir)) {
+            Write-Host "Los CSV de incoming/ ya fueron procesados y no existe baseline/prev: no se regenera nada."
+            exit 0
           }
 
           $baseDir = if ($esCorteNuevo) { $curDir } else { $prevDir }
