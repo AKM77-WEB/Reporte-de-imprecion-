@@ -23,6 +23,10 @@ param(
   [int]$Incluidas = 6000,  # limite por impresora, no total (son 4 impresoras)
   [double]$Tarifa = 0.20,
   [string]$EpsonJson = $null,
+  # epson.json del corte anterior: permite anotar la LECTURA TOTAL de vida de cada
+  # Epson (la que muestra su pagina web por IP) y que el consumo del periodo se
+  # calcule solo, restando la lectura del corte pasado.
+  [string]$EpsonBaselineJson = $null,
   # Carpeta con los CSV del corte anterior (linea base). Si existe el CSV del area,
   # el consumo del periodo = contador actual - contador de la linea base, cuenta por cuenta.
   # Asi no hace falta reiniciar los contadores fisicos en cada corte.
@@ -157,9 +161,85 @@ if ($BaselineDir -and (Test-Path $BaselineDir)) {
   Write-Host "Linea base aplicada desde: $BaselineDir (consumo = contador actual - corte anterior)"
 }
 
+# ---------- Epson: lectura total de vida -> consumo del periodo ----------
+# Formato nuevo de incoming/epson.json (se admite el viejo con "pages" directo):
+#   [{ "name":"Recepcion", "ip":"192.168.1.50", "lectura":15230,
+#      "fecha":"15/09/2026", "costoKit":450.00, "rendimientoKit":1800 }]
+# lectura = contador total que muestra la impresora al entrar a su IP.
+# paginas del periodo = lectura - lectura del corte anterior (por ip o por nombre);
+# sin corte anterior = 0 (primer registro, solo establece la base);
+# lectura menor que la base = impresora reiniciada/repuesta, se usa tal cual.
+function Get-EpsonProp($obj, [string]$prop) {
+  $p = $obj.PSObject.Properties[$prop]
+  if ($p -and $null -ne $p.Value -and ('' + $p.Value).Trim() -ne '') { return $p.Value }
+  return $null
+}
+
 $epson = @()
 if ($EpsonJson -and (Test-Path $EpsonJson)) {
-  $epson = @(Get-Content $EpsonJson -Raw | ConvertFrom-Json)
+  # El "| ForEach-Object { $_ }" aplana el arreglo: PowerShell 5.1 entrega el JSON
+  # como un solo objeto anidado y sin esto saldria una unica entrada vacia.
+  $epsonIn = @((Get-Content $EpsonJson -Raw -Encoding UTF8 | ConvertFrom-Json) | ForEach-Object { $_ })
+  $epsonBase = @()
+  if ($EpsonBaselineJson -and (Test-Path $EpsonBaselineJson)) {
+    $epsonBase = @((Get-Content $EpsonBaselineJson -Raw -Encoding UTF8 | ConvertFrom-Json) | ForEach-Object { $_ })
+  }
+
+  function Find-EpsonBase($entry) {
+    $ip = ('' + (Get-EpsonProp $entry 'ip')).Trim()
+    if ($ip) {
+      foreach ($b in $epsonBase) { if ((('' + (Get-EpsonProp $b 'ip')).Trim()) -eq $ip) { return $b } }
+    }
+    $nm = ('' + (Get-EpsonProp $entry 'name')).Trim().ToLowerInvariant()
+    foreach ($b in $epsonBase) {
+      if ((('' + (Get-EpsonProp $b 'name')).Trim().ToLowerInvariant()) -eq $nm) { return $b }
+    }
+    return $null
+  }
+
+  $epson = @(foreach ($e in $epsonIn) {
+    $costPerPage = $null
+    $cpp = Get-EpsonProp $e 'costPerPage'
+    $kit = Get-EpsonProp $e 'costoKit'
+    $rend = Get-EpsonProp $e 'rendimientoKit'
+    if ($null -ne $cpp) { $costPerPage = [math]::Round((Get-Num $cpp), 4) }
+    elseif ($null -ne $kit -and $null -ne $rend -and (Get-Num $rend) -gt 0) {
+      $costPerPage = [math]::Round((Get-Num $kit) / (Get-Num $rend), 4)
+    }
+
+    $lectura = Get-EpsonProp $e 'lectura'
+    $pagesIn = Get-EpsonProp $e 'pages'
+    $pages = 0
+    if ($null -ne $lectura) {
+      $lectura = Get-Num $lectura
+      $b = Find-EpsonBase $e
+      $lecturaBase = if ($b) { Get-EpsonProp $b 'lectura' } else { $null }
+      if ($null -ne $lecturaBase -and (Get-Num $lecturaBase) -le $lectura) {
+        $pages = $lectura - (Get-Num $lecturaBase)
+      } elseif ($null -ne $lecturaBase) {
+        $pages = $lectura   # contador reiniciado o impresora repuesta
+      } else {
+        $pages = 0          # primer registro: establece la base
+      }
+    } elseif ($null -ne $pagesIn) {
+      $pages = Get-Num $pagesIn   # formato viejo: paginas del periodo a mano
+    }
+
+    $costPeriod = $null
+    if ($null -ne $costPerPage) { $costPeriod = [math]::Round($pages * $costPerPage, 2) }
+    $gastoVida = $null
+    if ($null -ne $costPerPage -and $null -ne $lectura) { $gastoVida = [math]::Round($lectura * $costPerPage, 2) }
+
+    $fecha = Get-EpsonProp $e 'fecha'
+    if ($null -eq $fecha) { $fecha = $Generado }
+
+    [ordered]@{
+      name = ('' + (Get-EpsonProp $e 'name')); ip = (Get-EpsonProp $e 'ip')
+      pages = $pages; fecha = ('' + $fecha)
+      costPerPage = $costPerPage; costPeriod = $costPeriod
+      lectura = $lectura; gastoVida = $gastoVida
+    }
+  })
 }
 
 $report = [ordered]@{

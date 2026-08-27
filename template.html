@@ -901,9 +901,11 @@ License: MIT
           '<div class="area-top">' +
             '<span class="area-swatch" style="background:var(--epson)"></span>' +
             '<span class="area-name">'+escapeHtml(p.name)+'</span>' +
-            '<span class="area-meta">'+fmt(p.pages)+' páginas · leído el '+escapeHtml(p.fecha)+'</span>' +
+            '<span class="area-meta">'+fmt(p.pages)+' páginas · leído el '+escapeHtml(p.fecha)+
+              (p.lectura ? ' · contador de vida: '+fmt(p.lectura)+' pág.' : '')+'</span>' +
             '<span class="area-costexc" style="color:var(--epson)">'+costoTxt+'</span>' +
-            '<span class="area-costexc-sub">'+costPPTxt+'</span>' +
+            '<span class="area-costexc-sub">'+costPPTxt+
+              (p.gastoVida ? ' · ≈ '+mxn(p.gastoVida)+' de tinta en su vida útil' : '')+'</span>' +
           '</div>' +
           '<div class="area-bar"><div style="width:0%;background:var(--epson);height:100%;transition:width .9s cubic-bezier(.16,1,.3,1);" class="bar-incl"></div></div>';
         epsonOut.appendChild(card);

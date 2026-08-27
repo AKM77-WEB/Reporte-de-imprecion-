@@ -95,12 +95,19 @@ jobs:
           # Sin CSVs nuevos y sin linea base previa no hay nada que regenerar
           # (p.ej. solo se edito periodo.txt): se conserva el reporte publicado.
           if (-not $esCorteNuevo -and -not (Test-Path $prevDir)) {
+            # Aun asi, un primer registro de lecturas Epson si establece su base.
+            if ((Test-Path 'incoming/epson.json') -and -not (Test-Path (Join-Path $curDir 'epson.json'))) {
+              Copy-Item 'incoming/epson.json' (Join-Path $curDir 'epson.json')
+              Write-Host "Primer registro Epson: lecturas guardadas como linea base para el siguiente corte."
+            }
             Write-Host "Los CSV de incoming/ ya fueron procesados y no existe baseline/prev: no se regenera nada."
             exit 0
           }
 
           $baseDir = if ($esCorteNuevo) { $curDir } else { $prevDir }
           if (Test-Path $baseDir) { $params.BaselineDir = $baseDir }
+          $epsonBase = Join-Path $baseDir 'epson.json'
+          if (Test-Path $epsonBase) { $params.EpsonBaselineJson = $epsonBase }
           Write-Host "Corte nuevo: $esCorteNuevo | Linea base: $(if (Test-Path $baseDir) { $baseDir } else { 'ninguna (contadores tal cual)' })"
 
           ./Build-Report.ps1 @params
@@ -111,6 +118,16 @@ jobs:
             if (Test-Path $curDir)  { Move-Item $curDir $prevDir }
             New-Item -ItemType Directory -Path $curDir -Force | Out-Null
             foreach ($p in $canon.Keys) { Copy-Item $canon[$p] (Join-Path $curDir "$p.csv") }
+            # La base Epson viaja con el corte: lecturas nuevas si las hay,
+            # si no se arrastra la base anterior (el diff cubrira dos periodos).
+            if (Test-Path 'incoming/epson.json') { Copy-Item 'incoming/epson.json' (Join-Path $curDir 'epson.json') }
+            elseif (Test-Path (Join-Path $prevDir 'epson.json')) { Copy-Item (Join-Path $prevDir 'epson.json') (Join-Path $curDir 'epson.json') }
+          } else {
+            # Re-corrida: si las lecturas Epson llegaron despues del corte,
+            # tambien deben quedar como base para el siguiente.
+            if ((Test-Path 'incoming/epson.json') -and -not (Test-Path (Join-Path $curDir 'epson.json'))) {
+              Copy-Item 'incoming/epson.json' (Join-Path $curDir 'epson.json')
+            }
           }
 
       - name: Publicar cambios

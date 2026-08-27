@@ -48,17 +48,41 @@ desde hace meses. Detalles:
   (lápiz ✏️ → escribe el texto → Commit changes) **antes** de subir los CSV,
   o vuelve a correr el robot después (pestaña Actions → "Generar reporte" → Run workflow).
 
-## Impresoras Epson (opcional)
+## Impresoras Epson (opcional) — con la lectura de su página web
 
-Si quieres incluir las Epson a color, crea o edita el archivo `incoming/epson.json` con este formato:
+Las Epson muestran su **contador total de vida** al entrar a su dirección IP desde el
+navegador (el número acumulado desde que se compró). Solo apunta ese número: el robot
+guarda la lectura de cada corte y calcula lo del mes restando la lectura anterior,
+igual que con las Kyocera. **No hay que reiniciar nada.**
+
+Crea o edita `incoming/epson.json` con este formato (una entrada por impresora):
 
 ```json
 [
-  { "name": "Recepción", "pages": 350, "fecha": "15/08/2026", "costPerPage": 0.25, "costPeriod": 87.50 }
+  {
+    "name": "Recepción",
+    "ip": "192.168.1.50",
+    "lectura": 15230,
+    "fecha": "15/09/2026",
+    "costoKit": 450.00,
+    "rendimientoKit": 1800
+  }
 ]
 ```
 
-Si no existe ese archivo, el reporte sale solo con las Kyocera (normal).
+- `lectura`: el contador total que muestra la impresora en su página (por IP).
+- `costoKit` y `rendimientoKit`: lo que cuesta el kit de tinta y cuántas páginas rinde;
+  con eso se calcula el costo por página (también se acepta `costPerPage` directo).
+- La **primera vez** que registras una impresora, ese mes sale con 0 páginas: la lectura
+  solo queda guardada como base, y a partir del siguiente corte ya se calcula solo.
+  Puedes hacer ese primer registro cualquier día, no hace falta esperar al corte.
+- Si una Epson se reinicia o se reemplaza (la lectura sale menor que la anterior),
+  el robot lo detecta y usa la lectura tal cual.
+- El reporte muestra además el contador de vida y el gasto estimado de tinta de toda
+  la vida útil de cada impresora, y cada corte queda en el historial.
+
+En cada corte solo actualizas `lectura` (y `fecha`) de cada impresora antes de subir los CSV.
+Si no existe `incoming/epson.json`, el reporte sale solo con las Kyocera (normal).
 
 ## Si algo sale mal
 
