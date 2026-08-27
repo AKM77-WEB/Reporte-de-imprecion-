@@ -124,9 +124,10 @@ jobs:
             elseif (Test-Path (Join-Path $prevDir 'epson.json')) { Copy-Item (Join-Path $prevDir 'epson.json') (Join-Path $curDir 'epson.json') }
           } else {
             # Re-corrida: si las lecturas Epson llegaron despues del corte,
-            # tambien deben quedar como base para el siguiente.
-            if ((Test-Path 'incoming/epson.json') -and -not (Test-Path (Join-Path $curDir 'epson.json'))) {
-              Copy-Item 'incoming/epson.json' (Join-Path $curDir 'epson.json')
+            # quedan como base del siguiente (por eso las lecturas se actualizan
+            # JUNTO con los CSV o despues de subirlos, nunca dias antes).
+            if (Test-Path 'incoming/epson.json') {
+              Copy-Item 'incoming/epson.json' (Join-Path $curDir 'epson.json') -Force
             }
           }
 

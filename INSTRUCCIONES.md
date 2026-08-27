@@ -81,8 +81,29 @@ Crea o edita `incoming/epson.json` con este formato (una entrada por impresora):
 - El reporte muestra además el contador de vida y el gasto estimado de tinta de toda
   la vida útil de cada impresora, y cada corte queda en el historial.
 
-En cada corte solo actualizas `lectura` (y `fecha`) de cada impresora antes de subir los CSV.
-Si no existe `incoming/epson.json`, el reporte sale solo con las Kyocera (normal).
+En cada corte solo actualizas `lectura` (y `fecha`) de cada impresora **junto con los CSV
+del corte o justo después de subirlos** (nunca días antes: la lectura queda amarrada al
+corte con el que se sube). Si no existe `incoming/epson.json`, el reporte sale solo con
+las Kyocera (normal).
+
+## Corte automático desde la computadora (recomendado)
+
+En la copia del repositorio en la computadora de la oficina está **`Corte-Epson.bat`**:
+con doble clic, el script consulta cada Epson por su IP, lee el contador solo, actualiza
+`incoming/epson.json` y lo sube a GitHub. Nada que teclear.
+
+Y mejor todavía: si antes de dar doble clic dejas los 4 CSV de Kyocera Net Viewer en la
+carpeta `corte\` del repositorio, el script sube **todo el corte en un solo paso**
+(CSVs + lecturas Epson) y el robot publica el reporte completo.
+
+La impresora debe estar encendida y en red. Registrada hasta ahora:
+
+| Impresora | IP | Tinta | Rendimiento usado |
+|---|---|---|---|
+| Administración (L6270) | 120.200.124.1 | Kit T504 ($900) | 6,000 pág. por kit (≈ $0.15/pág.) |
+
+*(El rendimiento oficial del kit T504 es 7,500 pág. el negro y 6,000 pág. los colores;
+como esta impresora imprime ~85% a color, se usa 6,000.)*
 
 ## Si algo sale mal
 

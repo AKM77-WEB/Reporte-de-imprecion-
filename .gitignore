@@ -1,0 +1,3 @@
+# Carpeta local donde se dejan los CSV del corte antes de correr Corte-Epson.bat;
+# el script los copia a incoming/ con su nombre canonico y solo eso se sube.
+corte/
