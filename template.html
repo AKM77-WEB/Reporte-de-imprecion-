@@ -40,6 +40,7 @@ License: MIT
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
   }
   *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%; text-size-adjust:100%;}
   html,body{margin:0;padding:0;background:var(--page);color:var(--ink);font-family:var(--font);}
   body{
     min-height:100vh;
@@ -192,6 +193,7 @@ License: MIT
   .area-bottom .sp{ margin-left:auto; }
   .area-arrow{ font-size:13px; color: var(--accent); font-weight:700; }
 
+  .tbl-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
   table.tbl{ width:100%; border-collapse:collapse; margin-top:22px; font-size:14px; }
   table.tbl thead th{
     text-align:left; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-muted);
@@ -207,6 +209,7 @@ License: MIT
   .mini-bar-wrap{ width:120px; height:7px; background: var(--surface-2); border-radius:4px; overflow:hidden; }
   .mini-bar{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), #6ab0f2); transition: width .9s cubic-bezier(.16,1,.3,1); border-radius:4px; }
   .tag{ display:inline-block; font-size:11px; padding:3px 9px; border-radius:20px; background: var(--surface-2); border:1px solid var(--border); color: var(--ink-2); font-weight:600; }
+  .name-area{ display:none; }
 
   footer.foot{ margin-top: 72px; font-size:12.5px; color: var(--ink-muted); line-height:1.7; border-top:1px solid var(--border-soft); padding-top:20px; }
 
@@ -278,6 +281,7 @@ License: MIT
     .area-bar{ height:5px; margin-top:5px; border-radius:2px; }
     .area-bottom{ font-size:9.5px; margin-top:4px; }
 
+    .tbl-scroll{ overflow:visible; }
     table.tbl{ font-size:10px; margin-top:7px; }
     table.tbl thead th{ padding-bottom:4px; font-size:8.5px; }
     table.tbl tbody td{ padding:3.5px 0; }
@@ -289,10 +293,64 @@ License: MIT
   }
 
   @media screen and (max-width: 860px){
+    .wrap{ padding: 32px 20px 72px; }
     .meta-row{ grid-template-columns: repeat(2,1fr); }
     .drop-grid, .contract-grid, .kpi-grid{ grid-template-columns: 1fr 1fr; }
     .epson-grid{ grid-template-columns: 1fr 1fr; }
     #dash h1.title{ font-size:32px; }
+  }
+
+  /* ---------- Teléfonos ---------- */
+  @media screen and (max-width: 600px){
+    .wrap{ padding: 22px 14px 60px; }
+
+    #setup h1{ font-size:26px; }
+    #setup p.lead{ font-size:14px; margin-bottom:26px; }
+    .meta-row{ gap:10px; }
+    .meta-row .field:first-child{ grid-column: 1 / -1; }
+    .drop-grid, .contract-grid{ grid-template-columns: 1fr; }
+    .dropzone{ padding:16px 16px 14px; }
+    .epson-grid{ grid-template-columns: 1fr 1fr; }
+    .epson-grid .field:first-child{ grid-column: 1 / -1; }
+
+    #dash header.top{ align-items:flex-start; }
+    .top-actions{ flex-wrap:wrap; }
+    .top-actions .btn{ padding:9px 13px; font-size:12px; }
+    #dash h1.title{ font-size:27px; margin:22px 0 8px; }
+    .subline{ font-size:14px; margin:0 0 28px; }
+
+    .kpi-grid{ gap:10px; margin-bottom:30px; }
+    .kpi{ padding:16px 14px 14px; }
+    .kpi-value{ font-size:24px; }
+    .section{ margin-top:38px; }
+    .section-head h2{ font-size:18px; }
+    .legend-row{ gap:12px 18px; font-size:12.5px; }
+
+    .area-card{ padding:16px 14px; }
+    .area-card:hover{ transform:none; }
+    .area-name{ font-size:16px; }
+    .area-costexc{ font-size:16px; }
+    .area-bottom{ gap:8px 14px; font-size:12px; }
+
+    /* tablas: sin barra decorativa; si aún no cabe, se desliza de lado */
+    table.tbl{ font-size:12.5px; }
+    table.tbl .num, table.tbl .name{ white-space:nowrap; }
+    table.tbl tbody td{ padding:9px 0 9px 8px; }
+    table.tbl thead th{ padding-left:8px; }
+    table.tbl thead th:first-child, table.tbl tbody td:first-child{ padding-left:0; }
+    #dash table.tbl th:nth-child(3), #dash table.tbl td:nth-child(3),
+    #dash table.tbl th:nth-child(4), #dash table.tbl td:nth-child(4){ display:none; }
+    .name-area{ display:block; margin-top:4px; }
+    .name-area .tag{ font-size:10px; padding:2px 8px; }
+    #detail table.tbl th:nth-child(3), #detail table.tbl td:nth-child(3),
+    #detail table.tbl th:nth-child(4), #detail table.tbl td:nth-child(4),
+    #detail table.tbl th:nth-child(5), #detail table.tbl td:nth-child(5){ display:none; }
+
+    #detail h2.title{ font-size:24px; }
+    .detail-stats{ gap:14px 22px; text-align:left; }
+    .dstat-val{ font-size:19px; }
+    #archBanner{ flex-wrap:wrap; }
+    footer.foot{ margin-top:48px; }
   }
 </style>
 </head>
@@ -392,10 +450,12 @@ License: MIT
 
     <div class="section">
       <div class="section-head"><h2>Top <span id="topNShown"></span> usuarios de la empresa</h2></div>
+      <div class="tbl-scroll">
       <table class="tbl">
         <thead><tr><th style="width:36px;">#</th><th>Persona</th><th>Área</th><th style="width:130px;"></th><th style="text-align:right;">Páginas</th><th style="text-align:right;">Costo atribuido</th></tr></thead>
         <tbody id="topBody"></tbody>
       </table>
+      </div>
     </div>
 
     <footer class="foot" id="footNote"></footer>
@@ -415,10 +475,12 @@ License: MIT
         <div><div class="dstat-val tabular" id="detailCosto" style="color:var(--accent)"></div><div class="dstat-label">Costo total</div></div>
       </div>
     </div>
+    <div class="tbl-scroll">
     <table class="tbl" style="margin-top:8px;">
       <thead><tr><th style="width:36px;">#</th><th>Persona</th><th style="width:130px;"></th><th style="text-align:right;">Impresión</th><th style="text-align:right;">Copias</th><th style="text-align:right;">Total</th><th style="text-align:right;">Costo atribuido</th></tr></thead>
       <tbody id="detailBody"></tbody>
     </table>
+    </div>
   </section>
 
 </div>
@@ -869,8 +931,8 @@ License: MIT
       tr.style.animationDelay = (i*0.035)+'s';
       tr.innerHTML =
         '<td class="rank tabular">'+String(i+1).padStart(2,'0')+'</td>' +
-        '<td class="name">'+escapeHtml(p.name)+'</td>' +
-        '<td><span class="tag">'+escapeHtml(p.areaName)+'</span></td>' +
+        '<td class="name">'+escapeHtml(p.name)+'<span class="name-area"><span class="tag">'+escapeHtml(p.areaName)+'</span></span></td>' +
+        '<td class="col-area"><span class="tag">'+escapeHtml(p.areaName)+'</span></td>' +
         '<td><div class="mini-bar-wrap"><div class="mini-bar" style="width:0%"></div></div></td>' +
         '<td class="num tabular">'+fmt(p.total)+'</td>' +
         '<td class="num dim tabular">'+mxn(p.total*p.costoPorPag)+'</td>';
