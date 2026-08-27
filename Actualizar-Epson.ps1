@@ -58,6 +58,41 @@ Write-Host "incoming/epson.json actualizado."
 $conCsvs = $false
 if (Test-Path $CsvDir) {
   $areas = 'ALMACEN', 'ADMINISTRACION', 'POSTVENTA', 'OPERACIONES'
+
+  # ¿Un solo CSV con TODAS las impresoras? (export combinado de Kyocera Net
+  # Viewer: cada fila trae la IP y el host del equipo). Se parte por impresora.
+  $mapaIP   = @{ '120.200.120.29' = 'ALMACEN'; '120.200.127.77' = 'ADMINISTRACION';
+                 '120.200.120.31' = 'POSTVENTA'; '120.200.124.6' = 'OPERACIONES' }
+  $mapaHost = @{ 'KM1AEFDE' = 'ALMACEN'; 'KM0F008F' = 'ADMINISTRACION';
+                 'KM1AEFDD' = 'POSTVENTA'; 'KM1AEFDA' = 'OPERACIONES' }
+  function Test-EsArea([string]$nombre) {
+    foreach ($a in $areas) { if ($nombre -match ('(?i)^' + $a)) { return $true } }
+    return $false
+  }
+  $combinado = Get-ChildItem $CsvDir -Filter *.csv -File |
+               Where-Object { -not (Test-EsArea $_.Name) } | Select-Object -First 1
+  if ($combinado) {
+    Write-Host "CSV combinado detectado ($($combinado.Name)): separando por impresora..."
+    $lineas = Get-Content $combinado.FullName -Encoding UTF8
+    $porArea = @{}
+    foreach ($a in $areas) { $porArea[$a] = New-Object System.Collections.Generic.List[string] }
+    foreach ($l in ($lineas | Select-Object -Skip 1)) {
+      $area = $null
+      if ($l -match '"(\d{1,3}(?:\.\d{1,3}){3})"' -and $mapaIP.ContainsKey($Matches[1])) { $area = $mapaIP[$Matches[1]] }
+      elseif ($l -match '"(KM[0-9A-Fa-f]{6})"' -and $mapaHost.ContainsKey($Matches[1].ToUpper())) { $area = $mapaHost[$Matches[1].ToUpper()] }
+      if ($area) { $porArea[$area].Add($l) }
+    }
+    $Utf8Sep = New-Object System.Text.UTF8Encoding($false)
+    foreach ($a in $areas) {
+      if ($porArea[$a].Count -gt 0) {
+        [System.IO.File]::WriteAllLines((Join-Path $CsvDir "$a.csv"), ([string[]](@($lineas[0]) + $porArea[$a])), $Utf8Sep)
+        Write-Host "  $a.csv: $($porArea[$a].Count) filas"
+      } else {
+        Write-Host "  AVISO: ninguna fila del combinado corresponde a $a (¿cambio la IP de esa impresora?)"
+      }
+    }
+  }
+
   foreach ($a in $areas) {
     $f = Get-ChildItem $CsvDir -Filter *.csv -File |
          Where-Object { $_.Name -match ('(?i)^' + $a) } | Select-Object -First 1

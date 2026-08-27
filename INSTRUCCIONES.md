@@ -91,7 +91,9 @@ las Kyocera (normal).
 En la computadora de la oficina hay una tarea programada de Windows
 (**"Corte reporte impresion"**, día 15 a las 9:00) que ejecuta `Corte-Programado.ps1`:
 avisa con una ventana que es día de corte, abre la carpeta `corte\` y queda esperando.
-Solo exportas los 4 CSV desde Kyocera Net Viewer a esa carpeta y el resto es solo:
+Solo exportas desde Kyocera Net Viewer **un único CSV con todas las impresoras** (el
+script lo separa solo por la IP de cada equipo; también acepta los 4 por área) y el
+resto es solo:
 lee las Epson por IP, arma la etiqueta del periodo (del corte anterior a hoy) y sube
 todo en un commit. Si ese día la compu estuvo apagada, corre el corte a mano con
 `Corte-Epson.bat` cuando puedas.

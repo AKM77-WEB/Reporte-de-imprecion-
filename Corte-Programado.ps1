@@ -18,7 +18,16 @@ $CsvDir = Join-Path $RepoDir 'corte'
 if (-not (Test-Path $CsvDir)) { New-Item -ItemType Directory -Path $CsvDir | Out-Null }
 
 $areas = 'ALMACEN', 'ADMINISTRACION', 'POSTVENTA', 'OPERACIONES'
+function Test-EsArea([string]$nombre) {
+  foreach ($a in $areas) { if ($nombre -match ('(?i)^' + $a)) { return $true } }
+  return $false
+}
 function Get-Faltantes {
+  # Un solo CSV combinado (todas las impresoras) exportado hoy tambien cuenta:
+  # Actualizar-Epson.ps1 lo parte por impresora al subir.
+  foreach ($f in (Get-ChildItem $CsvDir -Filter *.csv -File)) {
+    if (-not (Test-EsArea $f.Name) -and $f.LastWriteTime.Date -eq (Get-Date).Date) { return @() }
+  }
   $falta = @()
   foreach ($a in $areas) {
     $f = Get-ChildItem $CsvDir -Filter *.csv -File |
@@ -33,7 +42,7 @@ if ((Get-Faltantes).Count -gt 0) {
   Start-Process explorer.exe $CsvDir
   [System.Windows.Forms.MessageBox]::Show(
     ("Hoy es dia de corte del reporte de impresion." + [Environment]::NewLine + [Environment]::NewLine +
-     "Exporta los 4 CSV de contadores desde Kyocera Net Viewer (ALMACEN, ADMINISTRACION, POSTVENTA y OPERACIONES) y guardalos en la carpeta que se acaba de abrir:" + [Environment]::NewLine +
+     "Exporta desde Kyocera Net Viewer UN SOLO CSV de contadores con todas las impresoras (o los 4 por area, como prefieras) y guardalo en la carpeta que se acaba de abrir:" + [Environment]::NewLine +
      $CsvDir + [Environment]::NewLine + [Environment]::NewLine +
      "Este programa queda esperando: en cuanto esten los 4 archivos de hoy, lee las Epson por IP y sube todo solo."),
     'Corte del reporte de impresion',
