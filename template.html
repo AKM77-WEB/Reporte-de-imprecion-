@@ -396,7 +396,6 @@ License: MIT
         <span class="gen-note">Generado el <span id="hGenerado"></span></span>
         <button class="btn btn-outline-accent no-print" id="btnHistorial">🕘 Historial de reportes</button>
         <button class="btn btn-outline-accent no-print" id="btnPdf">↓ Imprimir / Guardar PDF</button>
-        <button class="btn btn-ghost no-print" id="btnReset">Nuevo reporte</button>
       </div>
     </header>
 
@@ -665,13 +664,6 @@ License: MIT
     document.getElementById('setup').classList.add('hidden');
     document.getElementById('dash').classList.remove('hidden');
     document.getElementById('detail').classList.add('hidden');
-    window.scrollTo({top:0, behavior:'instant'});
-  });
-
-  document.getElementById('btnReset').addEventListener('click', function(){
-    document.getElementById('dash').classList.add('hidden');
-    document.getElementById('detail').classList.add('hidden');
-    document.getElementById('setup').classList.remove('hidden');
     window.scrollTo({top:0, behavior:'instant'});
   });
 

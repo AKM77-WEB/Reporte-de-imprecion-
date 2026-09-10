@@ -104,6 +104,24 @@ lee las Epson por IP, arma la etiqueta del periodo (del corte anterior a hoy) y 
 todo en un commit. Si ese día la compu estuvo apagada, corre el corte a mano con
 `Corte-Epson.bat` cuando puedas.
 
+## Ver el avance de color cuando quieras
+
+Doble clic en **`Consultar-Color.bat`**: consulta las tres Epson en vivo por su IP y
+muestra, contra la última lectura registrada, cuánto se ha impreso y cuánto lleva de
+tinta. Ejemplo:
+
+```
+  IMPRESORA             ANTES      AHORA    IMPRESO        TINTA
+  Administración       53,791     54,981      1,190      $178.50
+  Operaciones          17,874     19,302      1,428      $214.20
+  Postventa            19,514     20,146        632       $94.80
+  TOTAL                                       3,250      $487.50
+```
+
+**Solo consulta**: no cambia la línea base ni el reporte publicado, así que se puede
+correr las veces que quieras y cualquier día. El reporte del sitio se actualiza en el
+corte (día 15).
+
 ## Corte automático desde la computadora (recomendado)
 
 En la copia del repositorio en la computadora de la oficina está **`Corte-Epson.bat`**:
